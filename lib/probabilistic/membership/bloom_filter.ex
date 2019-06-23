@@ -1,28 +1,60 @@
 defmodule Probabilistic.Membership.BloomFilter do
+  @moduledoc """
+  Bloom filter implementation with **concurrent accessibility**, powered by [`:atomics`](http://erlang.org/doc/man/atomics.html) module.
+
+  "A Bloom filter is a space-efficient probabilistic data structure,
+  conceived by Burton Howard Bloom in 1970,
+  that is used to test whether an element is a member of a set"
+
+  [Wikipedia](https://en.wikipedia.org/wiki/Bloom_filter#CITEREFZhiwangJungangJian2010)
+
+
+  ## Features
+
+  * Fixed size Bloom filter
+  * Concurrent reads & writes
+  * Custom hash functions
+  * Merge multiple Bloom filters into one
+  * Intersection of multiple Bloom filters
+  """
+
   import Bitwise
 
   alias __MODULE__
 
   @default_false_positive_probability 0.01
 
+  @phash2_range 1 <<< 32
+
+  @default_hash_functions [
+    &Murmur.hash_x64_128/1,
+    fn elem -> :erlang.phash2(elem, @phash2_range) end
+  ]
+
   @enforce_keys [
     :atomics_ref,
     :bit_count,
     :hash_functions,
-    :call_to_add_count
+    :put_counter
   ]
   defstruct [
     :atomics_ref,
     :bit_count,
     :hash_functions,
-    :call_to_add_count
+    :put_counter
   ]
 
-  def new(
-        capacity,
-        false_positive_probability \\ @default_false_positive_probability,
-        hash_functions \\ :default
-      ) do
+  @doc """
+  Returns a new %BloomFilter{} with default false_positive_probability
+  and hash_functions.
+  """
+  def new(capacity) do
+    new(capacity, @default_false_positive_probability, @default_hash_functions)
+  end
+
+  def new(capacity, false_positive_probability, hash_functions)
+      when is_integer(capacity) and capacity > 0 and false_positive_probability > 0 and
+             false_positive_probability < 1 do
     bit_count = required_bit_count(capacity, false_positive_probability)
 
     new_with_count(bit_count, hash_functions)
@@ -31,8 +63,8 @@ defmodule Probabilistic.Membership.BloomFilter do
   @doc """
   Returns a new BloomFilter struct
   """
-  def new_with_count(bit_count, hash_functions \\ :default) do
-    arity = bit_count |> atomics_arity
+  def new_with_count(bit_count, hash_functions) do
+    arity = div(bit_count, 64) + 1
 
     atomics_ref = :atomics.new(arity, signed: false)
 
@@ -40,18 +72,12 @@ defmodule Probabilistic.Membership.BloomFilter do
       atomics_ref: atomics_ref,
       bit_count: arity * 64,
       hash_functions: hash_functions,
-      call_to_add_count: 0
+      put_counter: 0
     }
   end
 
-  @doc false
-  def atomics_arity(bit_count) do
-    div(bit_count, 64) + 1
-  end
-
   @doc """
-  Returns the required bit count for
-
+  Returns the required bit count given
   `number_of_elements` - Number of elements that will be inserted
   `false_positive_probability` - Desired false positive probability of membership
 
@@ -67,89 +93,109 @@ defmodule Probabilistic.Membership.BloomFilter do
     |> ceil
   end
 
-  def current_false_positive_probability(bloom_filter) do
-  end
-
-  @phash2_range 1 <<< 32
-
-  def add(
+  @doc """
+  """
+  def put(
         filter = %BloomFilter{
           bit_count: bit_count,
           atomics_ref: atomics_ref,
-          hash_functions: :default,
-          call_to_add_count: call_to_add_count
+          hash_functions: hash_functions,
+          put_counter: put_counter
         },
         elem
       ) do
-    murmur = rem(Murmur.hash_x64_128(elem), bit_count)
+    hash_functions
+    |> Enum.each(fn hash_fun ->
+      hash = rem(hash_fun.(elem), bit_count)
 
-    phash2 = rem(:erlang.phash2(elem, @phash2_range), bit_count)
+      Probabilistic.Atomics.put_bit(atomics_ref, hash)
+    end)
 
-    atomics_add(atomics_ref, murmur)
-    atomics_add(atomics_ref, phash2)
-
-    %BloomFilter{
-      filter
-      | call_to_add_count: call_to_add_count + 1
-    }
+    %BloomFilter{filter | put_counter: put_counter + 1}
   end
 
-  def atomics_add(atomics_ref, bit_index) do
-    idx = bit_index |> atomics_index
+  @doc """
+  Check for membership.
 
-    current_value = :atomics.get(atomics_ref, idx)
-
-    next_value = current_value ||| 1 <<< atomics_bit_pos(bit_index)
-
-    :atomics.put(atomics_ref, idx, next_value)
-  end
-
-  def atomics_index(bit_index) do
-    div(bit_index, 64) + 1
-  end
-
-  def atomics_bit_pos(bit_index) do
-    rem(bit_index, 64)
-  end
-
+  Returns `false` if not a member. (definitely not in set)
+  Returns `true` if maybe a member. (possibly in set)
+  """
   def member?(
-        filter = %BloomFilter{
-          bit_count: bit_count,
+        %BloomFilter{
           atomics_ref: atomics_ref,
-          hash_functions: :default
+          bit_count: bit_count,
+          hash_functions: hash_functions
         },
         elem
       ) do
-    murmur = rem(Murmur.hash_x64_128(elem), bit_count)
-
-    phash2 = rem(:erlang.phash2(elem, @phash2_range), bit_count)
-
-    atomics_member?(atomics_ref, murmur) && atomics_member?(atomics_ref, phash2)
+    member?(atomics_ref, bit_count, hash_functions, elem)
   end
 
-  def atomics_member?(atomics_ref, bit_index) do
-    idx = bit_index |> atomics_index
+  def member?(atomics_ref, bit_count, hash_functions, elem, acc \\ true)
 
-    current_value = :atomics.get(atomics_ref, idx)
+  def member?(_, _, [], _, acc), do: acc
 
-    (current_value ||| 1 <<< atomics_bit_pos(bit_index)) == current_value
+  def member?(atomics_ref, bit_count, hash_functions, elem, acc) do
+    hash_functions
+    |> Enum.reduce_while(
+      true,
+      fn hash_fun, acc ->
+        if acc do
+          hash = rem(hash_fun.(elem), bit_count)
+
+          {:cont, Probabilistic.Atomics.bit?(atomics_ref, hash)}
+        else
+          {:halt, acc}
+        end
+      end
+    )
   end
 
   def approximate_element_count do
   end
 
-  def set_bits_count do
+  def current_false_positive_probability do
   end
 
-  def false_positive_probability do
+  @doc """
+  Merge multiple BloomFilter structs into one struct.
+  """
+  def merge([]), do: []
+
+  def merge(list = [first = %BloomFilter{atomics_ref: first_atomics_ref} | tl]) do
+    new_atomics_ref = Probabilistic.Atomics.new_like(first_atomics_ref)
+
+    list
+    |> Enum.reduce(
+      new_atomics_ref,
+      fn %BloomFilter{atomics_ref: atomics_ref}, acc ->
+        Probabilistic.Atomics.merge_bitwise(acc, atomics_ref)
+      end
+    )
+
+    %BloomFilter{
+      first
+      | atomics_ref: new_atomics_ref,
+        put_counter: put_counter_a + put_counter_b
+    }
   end
 
-  def merge do
-    # merge two bloom filters that have the same hash functions
-    # with Bitwise OR?
-  end
+  def intersection([]), do: []
 
-  def intersection do
-    # Bitwise XOR
+  def intersection(list = [first = %BloomFilter{atomics_ref: first_atomics_ref} | tl]) do
+    new_atomics_ref = Probabilistic.Atomics.new_like(first_atomics_ref)
+
+    Probabilistic.Atomics.merge_bitwise(new_atomics_ref, first_atomics_ref)
+
+    list
+    |> Enum.reduce(
+      new_atomics_ref,
+      fn %BloomFilter{atomics_ref: atomics_ref}, acc ->
+        Probabilistic.Atomics.intersect_bitwise(acc, atomics_ref)
+      end
+    )
+
+    # put_counter_is_inherited from first `%BloomFilter{}` struct
+    %BloomFilter{first | atomics_ref: new_atomics_ref}
   end
 end
