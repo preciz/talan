@@ -242,6 +242,24 @@ defmodule Probabilistic.Membership.BloomFilter do
   @doc """
   Returns current estimated false positivy probability.
   """
-  def current_false_positive_probability do
+  def current_false_positive_probability(%BloomFilter{atomics_ref: atomics_ref, filter_length: filter_length, hash_functions: hash_functions}) do
+    bits_not_set_count = filter_length - Probabilistic.Atomics.set_bits_count(atomics_ref)
+
+    hash_function_count = length(hash_functions)
+
+    :math.pow(1 - (bits_not_set_count / filter_length), hash_function_count)
+  end
+
+  @doc """
+  Returns general info of bits.
+  """
+  def bits_info(%BloomFilter{atomics_ref: atomics_ref, filter_length: filter_length}) do
+    set_bits_count = Probabilistic.Atomics.set_bits_count(atomics_ref)
+
+    %{
+      total_bits: filter_length,
+      set_bits_count: set_bits_count,
+      set_ratio: set_bits_count / filter_length
+    }
   end
 end

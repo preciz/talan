@@ -64,28 +64,32 @@ defmodule Probabilistic.Atomics do
   Sets the bit at `bit_index` to 1 in the atomic `ref`.
   """
   def put_bit(ref, bit_index) do
-    idx = div(bit_index, 64) + 1
+    {atomics_index, integer_bit_index} = bit_position(bit_index)
 
-    bit_pos = rem(idx, 64)
+    current_value = :atomics.get(ref, atomics_index)
 
-    current_value = :atomics.get(ref, idx)
+    next_value = current_value ||| (1 <<< integer_bit_index)
 
-    next_value = current_value ||| 1 <<< bit_pos
+    :atomics.put(ref, atomics_index, next_value)
+  end
 
-    :atomics.put(ref, idx, next_value)
+  defp bit_position(bit_index) when is_integer(bit_index) and bit_index >= 0 do
+    atomics_index = div(bit_index, 64) + 1
+
+    integer_bit_index = rem(bit_index, 64)
+
+    {atomics_index, integer_bit_index}
   end
 
   @doc """
-  Returns `true` if bit is 1 at `bit_index` in atomic `ref`, `false` otherwise.
+  Returns bit value at `bit_index` in atomic `ref`.
   """
   def bit_at(ref, bit_index) when is_reference(ref) and is_integer(bit_index) do
-    idx = div(bit_index, 64) + 1
+    {atomics_index, integer_bit_index} = bit_position(bit_index)
 
-    bit_pos = rem(idx, 64)
+    current_value = :atomics.get(ref, atomics_index)
 
-    current_value = :atomics.get(ref, idx)
-
-    case (current_value ||| 1 <<< bit_pos) do
+    case current_value ||| (1 <<< integer_bit_index) do
       ^current_value -> 1
       _else -> 0
     end
