@@ -8,6 +8,8 @@ defmodule Probabilistic.Membership.BloomFilter do
 
   [Wikipedia](https://en.wikipedia.org/wiki/Bloom_filter#CITEREFZhiwangJungangJian2010)
 
+  ## Credits
+  Partly inspired by [Blex](https://github.com/gyson/blex)
 
   ## Features
 
@@ -21,15 +23,6 @@ defmodule Probabilistic.Membership.BloomFilter do
   import Bitwise
 
   alias __MODULE__
-
-  @default_false_positive_probability 0.01
-
-  @phash2_range 1 <<< 32
-
-  @default_hash_functions [
-    &Murmur.hash_x64_128/1,
-    fn elem -> :erlang.phash2(elem, @phash2_range) end
-  ]
 
   @enforce_keys [
     :atomics_ref,
@@ -45,16 +38,23 @@ defmodule Probabilistic.Membership.BloomFilter do
   ]
 
   @doc """
-  Returns a new %BloomFilter{} with default false_positive_probability
-  and hash_functions.
+  Returns a new %BloomFilter{} with default false_positive_probability 0.01
+  and hash_functions murmur3 & :erlang.phash2.
   """
   def new(capacity) do
-    new(capacity, @default_false_positive_probability, @default_hash_functions)
+    false_positive_probability = 0.01
+
+    phash2_range = 1 <<< 32
+
+    hash_functions = [
+      &Murmur.hash_x64_128/1,
+      fn elem -> :erlang.phash2(elem, phash2_range) end
+    ]
+
+    new(capacity, false_positive_probability, hash_functions)
   end
 
-  def new(capacity, false_positive_probability, hash_functions)
-      when is_integer(capacity) and capacity > 0 and false_positive_probability > 0 and
-             false_positive_probability < 1 do
+  def new(capacity, false_positive_probability, hash_functions) when is_list(hash_functions) do
     bit_count = required_bit_count(capacity, false_positive_probability)
 
     new_with_count(bit_count, hash_functions)
@@ -78,22 +78,24 @@ defmodule Probabilistic.Membership.BloomFilter do
 
   @doc """
   Returns the required bit count given
-  `number_of_elements` - Number of elements that will be inserted
+  `capacity` - Number of elements that will be inserted
   `false_positive_probability` - Desired false positive probability of membership
 
   [https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions)
   """
-  def required_bit_count(
-        number_of_elements,
-        false_positive_probability \\ @default_false_positive_probability
-      ) do
+  def required_bit_count(capacity, false_positive_probability)
+      when is_integer(capacity) and capacity > 0 and false_positive_probability > 0 and
+             false_positive_probability < 1 do
     import :math, only: [log: 1, pow: 2]
 
-    (-number_of_elements * log(false_positive_probability) / pow(log(2), 2))
+    (-capacity * log(false_positive_probability) / pow(log(2), 2))
     |> ceil
   end
 
   @doc """
+  Puts elem into BloomFilter.
+
+  Returns BloomFilter.
   """
   def put(
         filter = %BloomFilter{
@@ -115,7 +117,7 @@ defmodule Probabilistic.Membership.BloomFilter do
   end
 
   @doc """
-  Check for membership.
+  Checks for membership.
 
   Returns `false` if not a member. (definitely not in set)
   Returns `true` if maybe a member. (possibly in set)
@@ -131,11 +133,7 @@ defmodule Probabilistic.Membership.BloomFilter do
     member?(atomics_ref, bit_count, hash_functions, elem)
   end
 
-  def member?(atomics_ref, bit_count, hash_functions, elem, acc \\ true)
-
-  def member?(_, _, [], _, acc), do: acc
-
-  def member?(atomics_ref, bit_count, hash_functions, elem, acc) do
+  def member?(atomics_ref, bit_count, hash_functions, elem) do
     hash_functions
     |> Enum.reduce_while(
       true,
@@ -158,11 +156,11 @@ defmodule Probabilistic.Membership.BloomFilter do
   end
 
   @doc """
-  Merge multiple BloomFilter structs into one struct.
+  Merge multiple BloomFilter structs atomics into one new struct.
   """
   def merge([]), do: []
 
-  def merge(list = [first = %BloomFilter{atomics_ref: first_atomics_ref} | tl]) do
+  def merge(list = [first = %BloomFilter{atomics_ref: first_atomics_ref} | _tl]) do
     new_atomics_ref = Probabilistic.Atomics.new_like(first_atomics_ref)
 
     list
@@ -176,13 +174,16 @@ defmodule Probabilistic.Membership.BloomFilter do
     %BloomFilter{
       first
       | atomics_ref: new_atomics_ref,
-        put_counter: put_counter_a + put_counter_b
+        put_counter: list |> Enum.reduce(0, &(&1.put_counter + &2))
     }
   end
 
+  @doc """
+  Intersection of BloomFilter structs atomics into one new struct.
+  """
   def intersection([]), do: []
 
-  def intersection(list = [first = %BloomFilter{atomics_ref: first_atomics_ref} | tl]) do
+  def intersection(list = [first = %BloomFilter{atomics_ref: first_atomics_ref} | _tl]) do
     new_atomics_ref = Probabilistic.Atomics.new_like(first_atomics_ref)
 
     Probabilistic.Atomics.merge_bitwise(new_atomics_ref, first_atomics_ref)
