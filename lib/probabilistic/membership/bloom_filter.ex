@@ -29,8 +29,6 @@ defmodule Probabilistic.Membership.BloomFilter do
       false
   """
 
-  import Bitwise
-
   alias __MODULE__
 
   @enforce_keys [
@@ -53,7 +51,13 @@ defmodule Probabilistic.Membership.BloomFilter do
              false_positive_probability < 1 and is_list(hash_functions) do
     hash_functions =
       case hash_functions do
-        [] -> default_hash_functions()
+        [] ->
+          hash_count = required_hash_function_count(false_positive_probability)
+
+          random_numbers = Enum.take_random(1..(hash_count * 2), hash_count)
+
+            for r <- random_numbers, do: seed_murmur_hash_fun(r)
+
         list -> list
       end
 
@@ -70,13 +74,11 @@ defmodule Probabilistic.Membership.BloomFilter do
     }
   end
 
-  defp default_hash_functions do
-    phash2_range = 1 <<< 32
-
-    [
-      &Murmur.hash_x64_128/1,
-      fn elem -> :erlang.phash2(elem, phash2_range) end
-    ]
+  @doc """
+  Returns count of required hash functions for `filter_length` and `false_positive_probability`
+  """
+  def required_hash_function_count(false_positive_probability) do
+    -:math.log2(false_positive_probability) |> ceil()
   end
 
   @doc """
@@ -91,8 +93,11 @@ defmodule Probabilistic.Membership.BloomFilter do
              false_positive_probability < 1 do
     import :math, only: [log: 1, pow: 2]
 
-    (-capacity * log(false_positive_probability) / pow(log(2), 2))
-    |> ceil
+    ceil(-capacity * log(false_positive_probability) / pow(log(2), 2))
+  end
+
+  defp seed_murmur_hash_fun(n) do
+    fn elem -> Murmur.hash_x64_128(elem, n) end
   end
 
   @doc """
