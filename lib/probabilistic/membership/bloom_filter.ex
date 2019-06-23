@@ -36,43 +36,29 @@ defmodule Probabilistic.Membership.BloomFilter do
   @enforce_keys [
     :atomics_ref,
     :filter_length,
-    :hash_functions,
-    :put_counter
+    :hash_functions
   ]
   defstruct [
     :atomics_ref,
     :filter_length,
-    :hash_functions,
-    :put_counter
+    :hash_functions
   ]
 
   @doc """
   Returns a new %BloomFilter{} with default false_positive_probability 0.01
   and hash_functions murmur3 & :erlang.phash2.
   """
-  def new(capacity, false_positive_probability \\ 0.01, hash_functions \\ []) when is_list(hash_functions) do
+  def new(capacity, false_positive_probability \\ 0.01, hash_functions \\ [])
+      when is_integer(capacity) and capacity >= 1 and false_positive_probability > 0 and
+             false_positive_probability < 1 and is_list(hash_functions) do
     hash_functions =
       case hash_functions do
-        [] ->
-          phash2_range = 1 <<< 32
-
-          [
-            &Murmur.hash_x64_128/1,
-            fn elem -> :erlang.phash2(elem, phash2_range) end
-          ]
-
+        [] -> default_hash_functions()
         list -> list
-    end
+      end
 
     filter_length = required_filter_length(capacity, false_positive_probability)
 
-    new_with_count(filter_length, hash_functions)
-  end
-
-  @doc """
-  Returns a new BloomFilter struct
-  """
-  def new_with_count(filter_length, hash_functions) do
     arity = div(filter_length, 64) + 1
 
     atomics_ref = :atomics.new(arity, signed: false)
@@ -80,9 +66,17 @@ defmodule Probabilistic.Membership.BloomFilter do
     %BloomFilter{
       atomics_ref: atomics_ref,
       filter_length: arity * 64,
-      hash_functions: hash_functions,
-      put_counter: 0
+      hash_functions: hash_functions
     }
+  end
+
+  defp default_hash_functions do
+    phash2_range = 1 <<< 32
+
+    [
+      &Murmur.hash_x64_128/1,
+      fn elem -> :erlang.phash2(elem, phash2_range) end
+    ]
   end
 
   @doc """
@@ -110,8 +104,7 @@ defmodule Probabilistic.Membership.BloomFilter do
         filter = %BloomFilter{
           filter_length: filter_length,
           atomics_ref: atomics_ref,
-          hash_functions: hash_functions,
-          put_counter: put_counter
+          hash_functions: hash_functions
         },
         elem
       ) do
@@ -122,7 +115,7 @@ defmodule Probabilistic.Membership.BloomFilter do
       Probabilistic.Atomics.put_bit(atomics_ref, hash)
     end)
 
-    %BloomFilter{filter | put_counter: put_counter + 1}
+    filter
   end
 
   @doc """
@@ -158,12 +151,6 @@ defmodule Probabilistic.Membership.BloomFilter do
     )
   end
 
-  def approximate_element_count do
-  end
-
-  def current_false_positive_probability do
-  end
-
   @doc """
   Merge multiple BloomFilter structs atomics into one new struct.
   """
@@ -180,11 +167,7 @@ defmodule Probabilistic.Membership.BloomFilter do
       end
     )
 
-    %BloomFilter{
-      first
-      | atomics_ref: new_atomics_ref,
-        put_counter: list |> Enum.reduce(0, &(&1.put_counter + &2))
-    }
+    %BloomFilter{first | atomics_ref: new_atomics_ref}
   end
 
   @doc """
@@ -205,7 +188,6 @@ defmodule Probabilistic.Membership.BloomFilter do
       end
     )
 
-    # put_counter_is_inherited from first `%BloomFilter{}` struct
     %BloomFilter{first | atomics_ref: new_atomics_ref}
   end
 
@@ -219,13 +201,35 @@ defmodule Probabilistic.Membership.BloomFilter do
       }) do
     set_bits_count = Probabilistic.Atomics.set_bits_count(atomics_ref)
 
-    # prevent :math.log(0) error
-    fill_ratio =
-      case set_bits_count / filter_length do
-        f when f < 1 -> f
-        _ -> 0.99
-      end
+    hash_function_count = length(hash_functions)
 
-    round(-filter_length / length(hash_functions) * :math.log(1 - fill_ratio))
+    estimate_element_count(filter_length, set_bits_count, hash_function_count)
+  end
+
+  def estimate_element_count(_, set_bits_count, hash_function_count)
+      when set_bits_count < hash_function_count do
+    0
+  end
+
+  def estimate_element_count(_, set_bits_count, hash_function_count)
+      when set_bits_count == hash_function_count do
+    1
+  end
+
+  def estimate_element_count(filter_length, set_bits_count, hash_function_count)
+      when filter_length == set_bits_count do
+    round(filter_length / hash_function_count)
+  end
+
+  def estimate_element_count(filter_length, set_bits_count, hash_function_count) do
+    est = :math.log(filter_length - set_bits_count) - :math.log(filter_length)
+
+    round(filter_length * -est / hash_function_count)
+  end
+
+  @doc """
+  Returns current estimated false positivy probability.
+  """
+  def current_false_positive_probability do
   end
 end
