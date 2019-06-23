@@ -15,9 +15,18 @@ defmodule Probabilistic.Membership.BloomFilter do
 
   * Fixed size Bloom filter
   * Concurrent reads & writes
-  * Custom hash functions
+  * Custom & default hash functions
   * Merge multiple Bloom filters into one
   * Intersection of multiple Bloom filters
+  * Estimate number of unique elements
+
+  ## Example
+      iex> b = BloomFilter.new(1000, 0.01)
+      iex> BloomFilter.put("Barna")
+      iex> BloomFilter.member?(b, "Barna")
+      true
+      iex> BloomFilter.member?(b, "Kovacs")
+      false
   """
 
   import Bitwise
@@ -26,13 +35,13 @@ defmodule Probabilistic.Membership.BloomFilter do
 
   @enforce_keys [
     :atomics_ref,
-    :bit_count,
+    :filter_length,
     :hash_functions,
     :put_counter
   ]
   defstruct [
     :atomics_ref,
-    :bit_count,
+    :filter_length,
     :hash_functions,
     :put_counter
   ]
@@ -41,36 +50,36 @@ defmodule Probabilistic.Membership.BloomFilter do
   Returns a new %BloomFilter{} with default false_positive_probability 0.01
   and hash_functions murmur3 & :erlang.phash2.
   """
-  def new(capacity) do
-    false_positive_probability = 0.01
+  def new(capacity, false_positive_probability \\ 0.01, hash_functions \\ []) when is_list(hash_functions) do
+    hash_functions =
+      case hash_functions do
+        [] ->
+          phash2_range = 1 <<< 32
 
-    phash2_range = 1 <<< 32
+          [
+            &Murmur.hash_x64_128/1,
+            fn elem -> :erlang.phash2(elem, phash2_range) end
+          ]
 
-    hash_functions = [
-      &Murmur.hash_x64_128/1,
-      fn elem -> :erlang.phash2(elem, phash2_range) end
-    ]
+        list -> list
+    end
 
-    new(capacity, false_positive_probability, hash_functions)
-  end
+    filter_length = required_filter_length(capacity, false_positive_probability)
 
-  def new(capacity, false_positive_probability, hash_functions) when is_list(hash_functions) do
-    bit_count = required_bit_count(capacity, false_positive_probability)
-
-    new_with_count(bit_count, hash_functions)
+    new_with_count(filter_length, hash_functions)
   end
 
   @doc """
   Returns a new BloomFilter struct
   """
-  def new_with_count(bit_count, hash_functions) do
-    arity = div(bit_count, 64) + 1
+  def new_with_count(filter_length, hash_functions) do
+    arity = div(filter_length, 64) + 1
 
     atomics_ref = :atomics.new(arity, signed: false)
 
     %BloomFilter{
       atomics_ref: atomics_ref,
-      bit_count: arity * 64,
+      filter_length: arity * 64,
       hash_functions: hash_functions,
       put_counter: 0
     }
@@ -83,7 +92,7 @@ defmodule Probabilistic.Membership.BloomFilter do
 
   [https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions)
   """
-  def required_bit_count(capacity, false_positive_probability)
+  def required_filter_length(capacity, false_positive_probability)
       when is_integer(capacity) and capacity > 0 and false_positive_probability > 0 and
              false_positive_probability < 1 do
     import :math, only: [log: 1, pow: 2]
@@ -99,7 +108,7 @@ defmodule Probabilistic.Membership.BloomFilter do
   """
   def put(
         filter = %BloomFilter{
-          bit_count: bit_count,
+          filter_length: filter_length,
           atomics_ref: atomics_ref,
           hash_functions: hash_functions,
           put_counter: put_counter
@@ -108,7 +117,7 @@ defmodule Probabilistic.Membership.BloomFilter do
       ) do
     hash_functions
     |> Enum.each(fn hash_fun ->
-      hash = rem(hash_fun.(elem), bit_count)
+      hash = rem(hash_fun.(elem), filter_length)
 
       Probabilistic.Atomics.put_bit(atomics_ref, hash)
     end)
@@ -125,23 +134,23 @@ defmodule Probabilistic.Membership.BloomFilter do
   def member?(
         %BloomFilter{
           atomics_ref: atomics_ref,
-          bit_count: bit_count,
+          filter_length: filter_length,
           hash_functions: hash_functions
         },
         elem
       ) do
-    member?(atomics_ref, bit_count, hash_functions, elem)
+    member?(atomics_ref, filter_length, hash_functions, elem)
   end
 
-  def member?(atomics_ref, bit_count, hash_functions, elem) do
+  def member?(atomics_ref, filter_length, hash_functions, elem) do
     hash_functions
     |> Enum.reduce_while(
       true,
       fn hash_fun, acc ->
         if acc do
-          hash = rem(hash_fun.(elem), bit_count)
+          hash = rem(hash_fun.(elem), filter_length)
 
-          {:cont, Probabilistic.Atomics.bit?(atomics_ref, hash)}
+          {:cont, Probabilistic.Atomics.bit_at(atomics_ref, hash) == 1}
         else
           {:halt, acc}
         end
@@ -198,5 +207,25 @@ defmodule Probabilistic.Membership.BloomFilter do
 
     # put_counter_is_inherited from first `%BloomFilter{}` struct
     %BloomFilter{first | atomics_ref: new_atomics_ref}
+  end
+
+  @doc """
+  Estimates count of unique elemenets in the filter.
+  """
+  def estimate_element_count(%BloomFilter{
+        atomics_ref: atomics_ref,
+        filter_length: filter_length,
+        hash_functions: hash_functions
+      }) do
+    set_bits_count = Probabilistic.Atomics.set_bits_count(atomics_ref)
+
+    # prevent :math.log(0) error
+    fill_ratio =
+      case set_bits_count / filter_length do
+        f when f < 1 -> f
+        _ -> 0.99
+      end
+
+    round(-filter_length / length(hash_functions) * :math.log(1 - fill_ratio))
   end
 end
