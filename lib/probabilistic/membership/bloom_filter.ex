@@ -22,10 +22,10 @@ defmodule Probabilistic.Membership.BloomFilter do
 
   ## Example
       iex> b = BloomFilter.new(1000, 0.01)
-      iex> BloomFilter.put("Barna")
-      iex> BloomFilter.member?(b, "Barna")
+      iex> b |> BloomFilter.put("Barna")
+      iex> b |> BloomFilter.member?("Barna")
       true
-      iex> BloomFilter.member?(b, "Kovacs")
+      iex> b |> BloomFilter.member?("Kovacs")
       false
   """
 
@@ -76,6 +76,8 @@ defmodule Probabilistic.Membership.BloomFilter do
 
   @doc """
   Returns count of required hash functions for `filter_length` and `false_positive_probability`
+
+  [Wikipedia](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions)
   """
   def required_hash_function_count(false_positive_probability) do
     -:math.log2(false_positive_probability) |> ceil()
@@ -86,7 +88,7 @@ defmodule Probabilistic.Membership.BloomFilter do
   `capacity` - Number of elements that will be inserted
   `false_positive_probability` - Desired false positive probability of membership
 
-  [https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions)
+  [Wikipedia](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions)
   """
   def required_filter_length(capacity, false_positive_probability)
       when is_integer(capacity) and capacity > 0 and false_positive_probability > 0 and
@@ -96,7 +98,8 @@ defmodule Probabilistic.Membership.BloomFilter do
     ceil(-capacity * log(false_positive_probability) / pow(log(2), 2))
   end
 
-  defp seed_murmur_hash_fun(n) do
+  @doc false
+  def seed_murmur_hash_fun(n) do
     fn elem -> Murmur.hash_x64_128(elem, n) end
   end
 
@@ -158,6 +161,8 @@ defmodule Probabilistic.Membership.BloomFilter do
 
   @doc """
   Merge multiple BloomFilter structs atomics into one new struct.
+
+  Note: To work correctly filters with same size & hash functions must be used.
   """
   def merge([]), do: []
 
@@ -177,6 +182,8 @@ defmodule Probabilistic.Membership.BloomFilter do
 
   @doc """
   Intersection of BloomFilter structs atomics into one new struct.
+
+  Note: To work correctly filters with same size & hash functions must be used.
   """
   def intersection([]), do: []
 
