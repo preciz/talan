@@ -29,7 +29,7 @@ defmodule Probabilistic.BloomFilter do
       false
   """
 
-  alias __MODULE__
+  alias __MODULE__, as: BF
 
   @enforce_keys [:atomics_ref, :filter_length, :hash_functions]
   defstruct [:atomics_ref, :filter_length, :hash_functions]
@@ -60,7 +60,7 @@ defmodule Probabilistic.BloomFilter do
 
     atomics_ref = :atomics.new(arity, signed: false)
 
-    %BloomFilter{
+    %BF{
       atomics_ref: atomics_ref,
       filter_length: arity * 64,
       hash_functions: hash_functions
@@ -101,7 +101,7 @@ defmodule Probabilistic.BloomFilter do
 
   Returns BloomFilter.
   """
-  def put(%BloomFilter{atomics_ref: atomics_ref} = bloom_filter, term) do
+  def put(%BF{atomics_ref: atomics_ref} = bloom_filter, term) do
     hash_term(bloom_filter, term)
     |> Enum.each(fn hash ->
       Probabilistic.Atomics.put_bit(atomics_ref, hash)
@@ -116,7 +116,7 @@ defmodule Probabilistic.BloomFilter do
   Returns `false` if not a member. (definitely not member)
   Returns `true` if maybe a member. (possibly member)
   """
-  def member?(%BloomFilter{atomics_ref: atomics_ref} = bloom_filter, term) do
+  def member?(%BF{atomics_ref: atomics_ref} = bloom_filter, term) do
     hashes = hash_term(bloom_filter, term)
 
     do_member?(atomics_ref, hashes)
@@ -154,18 +154,18 @@ defmodule Probabilistic.BloomFilter do
   """
   def merge([]), do: []
 
-  def merge(list = [first = %BloomFilter{atomics_ref: first_atomics_ref} | _tl]) do
+  def merge(list = [first = %BF{atomics_ref: first_atomics_ref} | _tl]) do
     new_atomics_ref = Probabilistic.Atomics.new_like(first_atomics_ref)
 
     list
     |> Enum.reduce(
       new_atomics_ref,
-      fn %BloomFilter{atomics_ref: atomics_ref}, acc ->
+      fn %BF{atomics_ref: atomics_ref}, acc ->
         Probabilistic.Atomics.merge_bitwise(acc, atomics_ref)
       end
     )
 
-    %BloomFilter{first | atomics_ref: new_atomics_ref}
+    %BF{first | atomics_ref: new_atomics_ref}
   end
 
   @doc """
@@ -178,7 +178,7 @@ defmodule Probabilistic.BloomFilter do
   """
   def intersection([]), do: []
 
-  def intersection(list = [first = %BloomFilter{atomics_ref: first_atomics_ref} | _tl]) do
+  def intersection(list = [first = %BF{atomics_ref: first_atomics_ref} | _tl]) do
     new_atomics_ref = Probabilistic.Atomics.new_like(first_atomics_ref)
 
     Probabilistic.Atomics.merge_bitwise(new_atomics_ref, first_atomics_ref)
@@ -186,12 +186,12 @@ defmodule Probabilistic.BloomFilter do
     list
     |> Enum.reduce(
       new_atomics_ref,
-      fn %BloomFilter{atomics_ref: atomics_ref}, acc ->
+      fn %BF{atomics_ref: atomics_ref}, acc ->
         Probabilistic.Atomics.intersect_bitwise(acc, atomics_ref)
       end
     )
 
-    %BloomFilter{first | atomics_ref: new_atomics_ref}
+    %BF{first | atomics_ref: new_atomics_ref}
   end
 
   @doc """
@@ -199,7 +199,7 @@ defmodule Probabilistic.BloomFilter do
 
   Returns an integer >= 0.
   """
-  def estimate_element_count(%BloomFilter{
+  def estimate_element_count(%BF{
         atomics_ref: atomics_ref,
         filter_length: filter_length,
         hash_functions: hash_functions
@@ -235,7 +235,7 @@ defmodule Probabilistic.BloomFilter do
   @doc """
   Returns current estimated false positivy probability.
   """
-  def current_false_positive_probability(%BloomFilter{
+  def current_false_positive_probability(%BF{
         atomics_ref: atomics_ref,
         filter_length: filter_length,
         hash_functions: hash_functions
@@ -250,7 +250,7 @@ defmodule Probabilistic.BloomFilter do
   @doc """
   Returns general info of bits.
   """
-  def bits_info(%BloomFilter{atomics_ref: atomics_ref, filter_length: filter_length}) do
+  def bits_info(%BF{atomics_ref: atomics_ref, filter_length: filter_length}) do
     set_bits_count = Probabilistic.Atomics.set_bits_count(atomics_ref)
 
     %{
