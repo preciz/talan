@@ -56,9 +56,10 @@ defmodule Probabilistic.Membership.BloomFilter do
 
           random_numbers = Enum.take_random(1..(hash_count * 2), hash_count)
 
-            for r <- random_numbers, do: seed_murmur_hash_fun(r)
+          for r <- random_numbers, do: seed_murmur_hash_fun(r)
 
-        list -> list
+        list ->
+          list
       end
 
     filter_length = required_filter_length(capacity, false_positive_probability)
@@ -242,7 +243,11 @@ defmodule Probabilistic.Membership.BloomFilter do
   @doc """
   Returns current estimated false positivy probability.
   """
-  def current_false_positive_probability(%BloomFilter{atomics_ref: atomics_ref, filter_length: filter_length, hash_functions: hash_functions}) do
+  def current_false_positive_probability(%BloomFilter{
+        atomics_ref: atomics_ref,
+        filter_length: filter_length,
+        hash_functions: hash_functions
+      }) do
     bits_not_set_count = filter_length - Probabilistic.Atomics.set_bits_count(atomics_ref)
 
     hash_function_count = length(hash_functions)
