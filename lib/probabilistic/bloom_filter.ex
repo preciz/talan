@@ -97,9 +97,12 @@ defmodule Probabilistic.BloomFilter do
   end
 
   @doc """
-  Puts elem into BloomFilter.
+  Puts `term` into `bloom_filter` a `%Probabilistic.BloomFilter{}` struct.
 
-  Returns BloomFilter.
+  After this the `member?` function will always return `true`
+  for the membership of `term`.
+
+  Returns `bloom_filter`.
   """
   def put(%BF{atomics_ref: atomics_ref} = bloom_filter, term) do
     hash_term(bloom_filter, term)
