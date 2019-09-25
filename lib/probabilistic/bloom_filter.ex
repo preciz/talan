@@ -241,7 +241,7 @@ defmodule Probabilistic.BloomFilter do
   end
 
   @doc """
-  Returns current estimated false positivy probability.
+  Returns current estimated false positivity probability.
   """
   def current_false_positive_probability(%BF{
         atomics_ref: atomics_ref,
