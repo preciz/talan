@@ -31,16 +31,8 @@ defmodule Probabilistic.BloomFilter do
 
   alias __MODULE__
 
-  @enforce_keys [
-    :atomics_ref,
-    :filter_length,
-    :hash_functions
-  ]
-  defstruct [
-    :atomics_ref,
-    :filter_length,
-    :hash_functions
-  ]
+  @enforce_keys [:atomics_ref, :filter_length, :hash_functions]
+  defstruct [:atomics_ref, :filter_length, :hash_functions]
 
   @doc """
   Returns a new %BloomFilter{} with default false_positive_probability 0.01
