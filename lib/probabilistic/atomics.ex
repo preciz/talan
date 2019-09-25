@@ -1,22 +1,16 @@
 defmodule Probabilistic.Atomics do
-  @moduledoc """
-  Defines helpers for Erlang :atomics module.
-  """
+  @moduledoc false
+  # Helper functions for working with Erlang :atomics module.
 
   import Bitwise
 
-  @doc """
-  Create a new unsigned atomic array with `size` like atomic `ref`.
-  """
+  # Create a new unsigned atomic array with `size` like atomic `ref`.
   def new_like(ref) when is_reference(ref), do: new_like(ref |> :atomics.info())
 
   def new_like(%{min: 0, size: size}), do: :atomics.new(size, signed: false)
 
-  @doc """
-  Merge atomics with Bitwise OR operator.
-
-  `ref_b` will be merged into `ref_a`.
-  """
+  # Merge atomics with Bitwise OR operator.
+  # `ref_b` will be merged into `ref_a`.
   def merge_bitwise(ref_a, ref_b) do
     %{size: size} = ref_a |> :atomics.info()
 
@@ -37,9 +31,7 @@ defmodule Probabilistic.Atomics do
     merge_bitwise(ref_a, ref_b, next_index)
   end
 
-  @doc """
-  Bitwise Intersection of atomics using Bitwise AND operator.
-  """
+  # Bitwise Intersection of atomics using Bitwise AND operator.
   def intersect_bitwise(ref_a, ref_b) do
     %{size: size} = ref_a |> :atomics.info()
 
@@ -60,9 +52,7 @@ defmodule Probabilistic.Atomics do
     intersect_bitwise(ref_a, ref_b, next_index)
   end
 
-  @doc """
-  Sets the bit at `bit_index` to 1 in the atomic `ref`.
-  """
+  # Sets the bit at `bit_index` to 1 in the atomic `ref`.
   def put_bit(ref, bit_index) do
     {atomics_index, integer_bit_index} = bit_position(bit_index)
 
@@ -81,9 +71,7 @@ defmodule Probabilistic.Atomics do
     {atomics_index, integer_bit_index}
   end
 
-  @doc """
-  Returns bit value at `bit_index` in atomic `ref`.
-  """
+  # Returns bit value at `bit_index` in atomic `ref`.
   def bit_at(ref, bit_index) when is_reference(ref) and is_integer(bit_index) do
     {atomics_index, integer_bit_index} = bit_position(bit_index)
 
@@ -95,9 +83,7 @@ defmodule Probabilistic.Atomics do
     end
   end
 
-  @doc """
-  Returns number of bits set to one in atomic `ref`.
-  """
+  # Returns number of bits set to one in atomic `ref`.
   def set_bits_count(ref) when is_reference(ref) do
     %{size: size} = ref |> :atomics.info()
 

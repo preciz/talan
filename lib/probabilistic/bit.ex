@@ -1,13 +1,9 @@
 defmodule Probabilistic.Bit do
-  @moduledoc """
-  Defines helpers for bitmasks.
-  """
+  @moduledoc false
+  # Helper functions for working with bitmasks.
 
   import Bitwise
 
-  @doc """
-  Returns count of bits set to 1 in an Integer.
-  """
   def count_set_bits(int, acc \\ 0)
 
   def count_set_bits(0, acc), do: acc
