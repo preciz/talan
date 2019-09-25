@@ -164,6 +164,9 @@ defmodule Probabilistic.Membership.BloomFilter do
   Merge multiple BloomFilter structs atomics into one new struct.
 
   Note: To work correctly filters with same size & hash functions must be used.
+
+  Returns a new `%BloomFilter{}` struct which set bits are the merged set bits of
+  the bloom filters in the `list`.
   """
   def merge([]), do: []
 
@@ -185,6 +188,9 @@ defmodule Probabilistic.Membership.BloomFilter do
   Intersection of BloomFilter structs atomics into one new struct.
 
   Note: To work correctly filters with same size & hash functions must be used.
+
+  Returns a new `%BloomFilter{}` struct which set bits are the intersection
+  the bloom filters in the `list`.
   """
   def intersection([]), do: []
 
@@ -206,6 +212,8 @@ defmodule Probabilistic.Membership.BloomFilter do
 
   @doc """
   Estimates count of unique elemenets in the filter.
+
+  Returns an integer >= 0.
   """
   def estimate_element_count(%BloomFilter{
         atomics_ref: atomics_ref,
