@@ -35,7 +35,7 @@ defmodule Probabilistic.BloomFilter do
   defstruct [:atomics_ref, :filter_length, :hash_functions]
 
   @doc """
-  Returns a new %BloomFilter{} with default false_positive_probability 0.01
+  Returns a new `%Probabilistic.BloomFilter{}` with default false_positive_probability 0.01
   and hash_functions murmur3 & :erlang.phash2.
   """
   def new(capacity, false_positive_probability \\ 0.01, hash_functions \\ [])
@@ -153,11 +153,11 @@ defmodule Probabilistic.BloomFilter do
   end
 
   @doc """
-  Merge multiple BloomFilter structs atomics into one new struct.
+  Merge multiple `%Probabilistic.BloomFilter{}` structs's atomics into one new struct.
 
   Note: To work correctly filters with same size & hash functions must be used.
 
-  Returns a new `%BloomFilter{}` struct which set bits are the merged set bits of
+  Returns a new `%Probabilistic.BloomFilter{}` struct which set bits are the merged set bits of
   the bloom filters in the `list`.
   """
   def merge([]), do: []
