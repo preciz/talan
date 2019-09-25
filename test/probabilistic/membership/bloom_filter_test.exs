@@ -5,7 +5,6 @@ defmodule Probabilistic.Membership.BloomFilterTest do
 
   doctest BloomFilter
 
-
   test "empty has no member" do
     b = BloomFilter.new(1024, 0.01)
 
@@ -30,7 +29,7 @@ defmodule Probabilistic.Membership.BloomFilterTest do
         b |> BloomFilter.member?(i)
       end
 
-    assert before_result |> Enum.all?(& &1 == false)
+    assert before_result |> Enum.all?(&(&1 == false))
 
     for i <- 1..100 do
       b |> BloomFilter.put(i)
@@ -41,7 +40,7 @@ defmodule Probabilistic.Membership.BloomFilterTest do
         b |> BloomFilter.member?(i)
       end
 
-    assert after_result |> Enum.all?
+    assert after_result |> Enum.all?()
   end
 
   test "merge" do
