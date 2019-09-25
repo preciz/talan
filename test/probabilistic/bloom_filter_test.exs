@@ -1,7 +1,7 @@
 defmodule Probabilistic.Membership.BloomFilterTest do
   use ExUnit.Case
 
-  alias Probabilistic.Membership.BloomFilter
+  alias Probabilistic.BloomFilter
 
   doctest BloomFilter
 

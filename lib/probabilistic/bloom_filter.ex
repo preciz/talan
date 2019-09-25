@@ -1,4 +1,4 @@
-defmodule Probabilistic.Membership.BloomFilter do
+defmodule Probabilistic.BloomFilter do
   @moduledoc """
   Bloom filter implementation with **concurrent accessibility**, powered by [`:atomics`](http://erlang.org/doc/man/atomics.html) module.
 
