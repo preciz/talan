@@ -101,53 +101,47 @@ defmodule Probabilistic.BloomFilter do
 
   Returns BloomFilter.
   """
-  def put(
-        filter = %BloomFilter{
-          filter_length: filter_length,
-          atomics_ref: atomics_ref,
-          hash_functions: hash_functions
-        },
-        elem
-      ) do
-    hash_functions
-    |> Enum.each(fn hash_fun ->
-      hash = rem(hash_fun.(elem), filter_length)
-
+  def put(%BloomFilter{atomics_ref: atomics_ref} = bloom_filter, term) do
+    hash_term(bloom_filter, term)
+    |> Enum.each(fn hash ->
       Probabilistic.Atomics.put_bit(atomics_ref, hash)
     end)
 
-    filter
+    bloom_filter
   end
 
   @doc """
-  Checks for membership.
+  Checks for membership of `term` in `bloom_filter`.
 
-  Returns `false` if not a member. (definitely not in set)
-  Returns `true` if maybe a member. (possibly in set)
+  Returns `false` if not a member. (definitely not member)
+  Returns `true` if maybe a member. (possibly member)
   """
-  def member?(
-        %BloomFilter{
-          atomics_ref: atomics_ref,
-          filter_length: filter_length,
-          hash_functions: hash_functions
-        },
-        elem
-      ) do
-    member?(atomics_ref, filter_length, hash_functions, elem)
+  def member?(%BloomFilter{atomics_ref: atomics_ref} = bloom_filter, term) do
+    hashes = hash_term(bloom_filter, term)
+
+    do_member?(atomics_ref, hashes)
   end
 
-  def member?(atomics_ref, filter_length, [hash_fun | hash_functions], elem) do
-    hash = rem(hash_fun.(elem), filter_length)
-
+  defp do_member?(atomics_ref, [hash | hashes_tl]) do
     if Probabilistic.Atomics.bit_at(atomics_ref, hash) == 1 do
       true
     else
-      member?(atomics_ref, filter_length, hash_functions, elem)
+      do_member?(atomics_ref, hashes_tl)
     end
   end
 
-  def member?(_, _, [], _) do
-    false
+  defp do_member?(_, []), do: false
+
+  @doc """
+  Hashes `term` with all `hash_functions` of `%Probabilistic.BloomFilter{}`.
+
+  Returns a list of hashed values.
+  """
+  def hash_term(%BloomFilter{filter_length: filter_length, hash_functions: hash_functions}, term) do
+    hash_functions
+    |> Enum.map(fn hash_fun ->
+      rem(hash_fun.(term), filter_length)
+    end)
   end
 
   @doc """
