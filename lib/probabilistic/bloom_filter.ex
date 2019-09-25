@@ -137,12 +137,17 @@ defmodule Probabilistic.BloomFilter do
 
   Returns a list of hashed values.
   """
-  def hash_term(%BloomFilter{filter_length: filter_length, hash_functions: hash_functions}, term) do
-    hash_functions
-    |> Enum.map(fn hash_fun ->
-      rem(hash_fun.(term), filter_length)
-    end)
+  def hash_term(%BF{filter_length: filter_length, hash_functions: hash_functions}, term) do
+    do_hash_term(filter_length, hash_functions, term)
   end
+
+  defp do_hash_term(filter_length, hash_functions, term, acc \\ [])
+  defp do_hash_term(filter_length, [hash_fun | tl], term, acc) do
+    new_acc = [rem(hash_fun.(term), filter_length) | acc]
+
+    do_hash_term(filter_length, tl, term, new_acc)
+  end
+  defp do_hash_term(_, [], _, acc), do: acc
 
   @doc """
   Merge multiple `%Probabilistic.BloomFilter{}` structs's atomics into one new struct.
