@@ -56,13 +56,13 @@ defmodule Probabilistic.BloomFilter do
 
     filter_length = required_filter_length(capacity, false_positive_probability)
 
-    arity = div(filter_length, 64) + 1
+    atomics_arity = max(div(filter_length, 64), 1)
 
-    atomics_ref = :atomics.new(arity, signed: false)
+    atomics_ref = :atomics.new(atomics_arity, signed: false)
 
     %BF{
       atomics_ref: atomics_ref,
-      filter_length: arity * 64,
+      filter_length: atomics_arity * 64,
       hash_functions: hash_functions
     }
   end
