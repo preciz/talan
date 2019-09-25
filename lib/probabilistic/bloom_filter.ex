@@ -136,20 +136,18 @@ defmodule Probabilistic.BloomFilter do
     member?(atomics_ref, filter_length, hash_functions, elem)
   end
 
-  def member?(atomics_ref, filter_length, hash_functions, elem) do
-    hash_functions
-    |> Enum.reduce_while(
-      true,
-      fn hash_fun, acc ->
-        if acc do
-          hash = rem(hash_fun.(elem), filter_length)
+  def member?(atomics_ref, filter_length, [hash_fun | hash_functions], elem) do
+    hash = rem(hash_fun.(elem), filter_length)
 
-          {:cont, Probabilistic.Atomics.bit_at(atomics_ref, hash) == 1}
-        else
-          {:halt, acc}
-        end
-      end
-    )
+    if Probabilistic.Atomics.bit_at(atomics_ref, hash) == 1 do
+      true
+    else
+      member?(atomics_ref, filter_length, hash_functions, elem)
+    end
+  end
+
+  def member?(_, _, [], _) do
+    false
   end
 
   @doc """
