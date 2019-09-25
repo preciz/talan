@@ -18,6 +18,7 @@ defmodule Probabilistic.Bit do
         int = int >>> 1
 
         count_set_bits(int, acc)
+
       1 ->
         int = int >>> 1
 
