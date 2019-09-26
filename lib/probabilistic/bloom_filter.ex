@@ -127,13 +127,13 @@ defmodule Probabilistic.BloomFilter do
 
   defp do_member?(atomics_ref, [hash | hashes_tl]) do
     if Probabilistic.Atomics.bit_at(atomics_ref, hash) == 1 do
-      true
-    else
       do_member?(atomics_ref, hashes_tl)
+    else
+      false
     end
   end
 
-  defp do_member?(_, []), do: false
+  defp do_member?(_, []), do: true
 
   @doc """
   Hashes `term` with all `hash_functions` of `%Probabilistic.BloomFilter{}`.
