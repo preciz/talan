@@ -1,4 +1,4 @@
-defmodule Probabilistic.Membership.BloomFilterTest do
+defmodule Probabilistic.BloomFilterTest do
   use ExUnit.Case
 
   alias Probabilistic.BloomFilter
