@@ -21,7 +21,7 @@ defmodule Probabilistic.BloomFilter do
   * Estimate number of unique elements
 
   ## Example
-      iex> b = BloomFilter.new(1000, 0.01)
+      iex> b = BloomFilter.new(1000)
       iex> b |> BloomFilter.put("Barna")
       iex> b |> BloomFilter.member?("Barna")
       true

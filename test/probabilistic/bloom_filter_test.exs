@@ -6,13 +6,13 @@ defmodule Probabilistic.Membership.BloomFilterTest do
   doctest BloomFilter
 
   test "empty has no member" do
-    b = BloomFilter.new(1024, 0.01)
+    b = BloomFilter.new(1024)
 
     assert BloomFilter.member?(b, "hello") == false
   end
 
   test "member?" do
-    b = BloomFilter.new(1024, 0.01)
+    b = BloomFilter.new(1024)
 
     BloomFilter.put(b, "hello")
 
@@ -22,7 +22,7 @@ defmodule Probabilistic.Membership.BloomFilterTest do
   end
 
   test "test member? 2" do
-    b = BloomFilter.new(1024, 0.01)
+    b = BloomFilter.new(1024)
 
     before_result =
       for i <- 1..100 do
@@ -49,8 +49,8 @@ defmodule Probabilistic.Membership.BloomFilterTest do
       BloomFilter.seed_murmur_hash_fun(7)
     ]
 
-    b1 = BloomFilter.new(1024, 0.01, hash_functions)
-    b2 = BloomFilter.new(1024, 0.01, hash_functions)
+    b1 = BloomFilter.new(1024, hash_functions: hash_functions)
+    b2 = BloomFilter.new(1024, hash_functions: hash_functions)
 
     BloomFilter.put(b1, "hello")
     BloomFilter.put(b2, "world")
@@ -69,8 +69,8 @@ defmodule Probabilistic.Membership.BloomFilterTest do
       BloomFilter.seed_murmur_hash_fun(7)
     ]
 
-    b1 = BloomFilter.new(1024, 0.01, hash_functions)
-    b2 = BloomFilter.new(1024, 0.01, hash_functions)
+    b1 = BloomFilter.new(1024, hash_functions: hash_functions)
+    b2 = BloomFilter.new(1024, hash_functions: hash_functions)
 
     BloomFilter.put(b1, "hello")
     BloomFilter.put(b2, "hello")
