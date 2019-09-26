@@ -168,7 +168,7 @@ defmodule Probabilistic.BloomFilter do
   @doc """
   Merge multiple `%Probabilistic.BloomFilter{}` structs's atomics into one new struct.
 
-  Note: To work correctly filters with same size & hash functions must be used.
+  Note: To work correctly filters with identical size & hash functions must be used.
 
   Returns a new `%Probabilistic.BloomFilter{}` struct which set bits are the merged set bits of
   the bloom filters in the `list`.
@@ -190,9 +190,9 @@ defmodule Probabilistic.BloomFilter do
   end
 
   @doc """
-  Intersection of BloomFilter structs atomics into one new struct.
+  Intersection of BloomFilter structs's atomics into one new struct.
 
-  Note: To work correctly filters with same size & hash functions must be used.
+  Note: To work correctly filters with identical size & hash functions must be used.
 
   Returns a new `%BloomFilter{}` struct which set bits are the intersection
   the bloom filters in the `list`.
