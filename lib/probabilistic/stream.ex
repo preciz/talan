@@ -13,7 +13,7 @@ defmodule Probabilistic.Stream do
   bloom filter it uses.
 
   ## Example
-      iex> list = ["a", "b", "c", "a", "b"] |> Probabilistic.Stream.uniq |> Enum.to_list
+      iex> ["a", "b", "c", "a", "b"] |> Probabilistic.Stream.uniq |> Enum.to_list
       ["a", "b", "c"]
   """
   def uniq(enum) do
