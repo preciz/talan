@@ -11,6 +11,10 @@ defmodule Probabilistic.Stream do
   The stream never returns duplicate elements but it
   sometimes detects false positive duplicates depending on the
   bloom filter it uses.
+
+  ## Example
+      iex> list = ["a", "b", "c", "a", "b"] |> Probabilistic.Stream.uniq |> Enum.to_list
+      ["a", "b", "c"]
   """
   def uniq(enum) do
     bloom_filter = BloomFilter.new(1_000_000)
