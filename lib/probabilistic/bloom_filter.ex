@@ -35,8 +35,11 @@ defmodule Probabilistic.BloomFilter do
   defstruct [:atomics_ref, :filter_length, :hash_functions]
 
   @doc """
-  Returns a new `%Probabilistic.BloomFilter{}` with default false_positive_probability 0.01
-  and hash_functions murmur3 & :erlang.phash2.
+  Returns a new `%Probabilistic.BloomFilter{}` for the desired `capacity`.
+
+  ## Options:
+    * `:false_positive_probability` - a float, defaults to 0.01
+    * `:hash_functions` - a list of hash functions, defaults to randomly seeded murmur
   """
   def new(capacity, false_positive_probability \\ 0.01, hash_functions \\ [])
       when is_integer(capacity) and capacity >= 1 and false_positive_probability > 0 and
