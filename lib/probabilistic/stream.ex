@@ -24,7 +24,7 @@ defmodule Probabilistic.Stream do
 
   @doc """
   Same as `Probabilistic.Stream.uniq/1` but allows to use
-  a custom bloom filter.
+  a custom `bloom_filter`.
 
   ## Example
       iex> bloom_filter = Probabilistic.BloomFilter.new(100_000, false_positive_probability: 0.001)
