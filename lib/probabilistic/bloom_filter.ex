@@ -106,7 +106,7 @@ defmodule Probabilistic.BloomFilter do
 
   @doc false
   def seed_murmur_hash_fun(n) do
-    fn elem -> Murmur.hash_x64_128(elem, n) end
+    fn term -> Murmur.hash_x64_128(term, n) end
   end
 
   @doc """
