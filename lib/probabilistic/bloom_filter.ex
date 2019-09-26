@@ -41,9 +41,19 @@ defmodule Probabilistic.BloomFilter do
     * `:false_positive_probability` - a float, defaults to 0.01
     * `:hash_functions` - a list of hash functions, defaults to randomly seeded murmur
   """
-  def new(capacity, false_positive_probability \\ 0.01, hash_functions \\ [])
-      when is_integer(capacity) and capacity >= 1 and false_positive_probability > 0 and
-             false_positive_probability < 1 and is_list(hash_functions) do
+  def new(capacity, options \\ []) when is_integer(capacity) and capacity >= 1 do
+    false_positive_probability = options |> Keyword.get(:false_positive_probability, 0.01)
+    hash_functions = options |> Keyword.get(:hash_functions, [])
+
+    if (false_positive_probability <= 0) || (false_positive_probability >= 1) do
+      raise ArgumentError, """
+      false_positive_probability must be a float between 0 and 1.
+      E.g. 0.01
+
+      Got: #{inspect(false_positive_probability)}
+      """
+    end
+
     hash_functions =
       case hash_functions do
         [] ->
