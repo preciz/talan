@@ -6,6 +6,7 @@ defmodule Probabilistic.Stream do
 
   Its main advantage is that it doesn't store elements
   emitted by the stream.
+  Instead it uses a bloom filter for membership check.
 
   The stream never returns duplicate elements but it
   sometimes detects false positive duplicates depending on the
