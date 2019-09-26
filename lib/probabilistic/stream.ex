@@ -22,7 +22,9 @@ defmodule Probabilistic.Stream do
     |> Stream.reject(fn x ->
       is_member = bloom_filter |> BloomFilter.member?(x)
 
-      bloom_filter |> BloomFilter.put(x)
+      if not is_member do
+        bloom_filter |> BloomFilter.put(x)
+      end
 
       is_member
     end)
