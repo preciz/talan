@@ -20,6 +20,7 @@ defmodule Probabilistic.MixProject do
   defp deps do
     [
       {:murmur, "~> 1.0"},
+      {:abit, "~> 0.1"},
     ]
   end
 end
