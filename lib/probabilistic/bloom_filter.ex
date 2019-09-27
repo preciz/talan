@@ -120,7 +120,7 @@ defmodule Probabilistic.BloomFilter do
   def put(%BF{atomics_ref: atomics_ref} = bloom_filter, term) do
     hash_term(bloom_filter, term)
     |> Enum.each(fn hash ->
-      Probabilistic.Atomics.put_bit(atomics_ref, hash)
+      Abit.set_bit(atomics_ref, hash, 1)
     end)
 
     bloom_filter
@@ -139,7 +139,7 @@ defmodule Probabilistic.BloomFilter do
   end
 
   defp do_member?(atomics_ref, [hash | hashes_tl]) do
-    if Probabilistic.Atomics.bit_at(atomics_ref, hash) == 1 do
+    if Abit.bit_at(atomics_ref, hash) == 1 do
       do_member?(atomics_ref, hashes_tl)
     else
       false
@@ -176,13 +176,15 @@ defmodule Probabilistic.BloomFilter do
   def merge([]), do: []
 
   def merge(list = [first = %BF{atomics_ref: first_atomics_ref} | _tl]) do
-    new_atomics_ref = Probabilistic.Atomics.new_like(first_atomics_ref)
+    %{size: size} = :atomics.info(first_atomics_ref)
+
+    new_atomics_ref = :atomics.new(size, signed: false)
 
     list
     |> Enum.reduce(
       new_atomics_ref,
       fn %BF{atomics_ref: atomics_ref}, acc ->
-        Probabilistic.Atomics.merge_bitwise(acc, atomics_ref)
+        Abit.merge(acc, atomics_ref)
       end
     )
 
@@ -200,15 +202,17 @@ defmodule Probabilistic.BloomFilter do
   def intersection([]), do: []
 
   def intersection(list = [first = %BF{atomics_ref: first_atomics_ref} | _tl]) do
-    new_atomics_ref = Probabilistic.Atomics.new_like(first_atomics_ref)
+    %{size: size} = :atomics.info(first_atomics_ref)
 
-    Probabilistic.Atomics.merge_bitwise(new_atomics_ref, first_atomics_ref)
+    new_atomics_ref = :atomics.new(size, signed: false)
+
+    Abit.merge(new_atomics_ref, first_atomics_ref)
 
     list
     |> Enum.reduce(
       new_atomics_ref,
       fn %BF{atomics_ref: atomics_ref}, acc ->
-        Probabilistic.Atomics.intersect_bitwise(acc, atomics_ref)
+        Abit.intersect(acc, atomics_ref)
       end
     )
 
@@ -225,7 +229,7 @@ defmodule Probabilistic.BloomFilter do
         filter_length: filter_length,
         hash_functions: hash_functions
       }) do
-    set_bits_count = Probabilistic.Atomics.set_bits_count(atomics_ref)
+    set_bits_count = Abit.set_bits_count(atomics_ref)
 
     hash_function_count = length(hash_functions)
 
@@ -261,7 +265,7 @@ defmodule Probabilistic.BloomFilter do
         filter_length: filter_length,
         hash_functions: hash_functions
       }) do
-    bits_not_set_count = filter_length - Probabilistic.Atomics.set_bits_count(atomics_ref)
+    bits_not_set_count = filter_length - Abit.set_bits_count(atomics_ref)
 
     hash_function_count = length(hash_functions)
 
@@ -272,7 +276,7 @@ defmodule Probabilistic.BloomFilter do
   Returns general info of bits.
   """
   def bits_info(%BF{atomics_ref: atomics_ref, filter_length: filter_length}) do
-    set_bits_count = Probabilistic.Atomics.set_bits_count(atomics_ref)
+    set_bits_count = Abit.set_bits_count(atomics_ref)
 
     %{
       total_bits: filter_length,
