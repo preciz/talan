@@ -115,15 +115,22 @@ defmodule Probabilistic.BloomFilter do
   After this the `member?` function will always return `true`
   for the membership of `term`.
 
-  Returns `bloom_filter`.
+  Returns `:ok`.
   """
-  def put(%BF{atomics_ref: atomics_ref} = bloom_filter, term) do
-    hash_term(bloom_filter, term)
+  def put(%BF{} = bloom_filter, term) do
+    hashes = hash_term(bloom_filter, term)
+
+    put_hashes(bloom_filter, hashes)
+
+    :ok
+  end
+
+  @doc false
+  def put_hashes(%BF{atomics_ref: atomics_ref}, hashes) when is_list(hashes) do
+    hashes
     |> Enum.each(fn hash ->
       Abit.set_bit(atomics_ref, hash, 1)
     end)
-
-    bloom_filter
   end
 
   @doc """
@@ -192,7 +199,7 @@ defmodule Probabilistic.BloomFilter do
   end
 
   @doc """
-  Intersection of BloomFilter structs's atomics into one new struct.
+  Intersection of `%Probabilistic.BloomFilter{}` structs's atomics into one new struct.
 
   Note: To work correctly filters with identical size & hash functions must be used.
 
@@ -258,7 +265,8 @@ defmodule Probabilistic.BloomFilter do
   end
 
   @doc """
-  Returns current estimated false positivity probability.
+  Returns a float representing current estimated
+  false positivity probability.
   """
   def current_false_positive_probability(%BF{
         atomics_ref: atomics_ref,
@@ -273,7 +281,7 @@ defmodule Probabilistic.BloomFilter do
   end
 
   @doc """
-  Returns general info of bits.
+  Returns a map with general info.
   """
   def bits_info(%BF{atomics_ref: atomics_ref, filter_length: filter_length}) do
     set_bits_count = Abit.set_bits_count(atomics_ref)
