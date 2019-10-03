@@ -59,9 +59,7 @@ defmodule Probabilistic.BloomFilter do
         [] ->
           hash_count = required_hash_function_count(false_positive_probability)
 
-          random_numbers = Enum.take_random(1..(hash_count * 2), hash_count)
-
-          for r <- random_numbers, do: seed_murmur_hash_fun(r)
+          seed_hash_functions(hash_count)
 
         list ->
           list
@@ -78,6 +76,12 @@ defmodule Probabilistic.BloomFilter do
       filter_length: atomics_arity * 64,
       hash_functions: hash_functions
     }
+  end
+
+  @doc false
+  def seed_hash_functions(hash_count) do
+    Enum.take_random(1..(hash_count * 2), hash_count)
+    |> Enum.map(&seed_murmur_hash_fun/1)
   end
 
   @doc """
