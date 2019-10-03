@@ -89,6 +89,11 @@ defmodule Probabilistic.BloomFilter do
     -:math.log2(false_positive_probability) |> ceil()
   end
 
+  @doc false
+  def seed_murmur_hash_fun(n) do
+    fn term -> Murmur.hash_x64_128(term, n) end
+  end
+
   @doc """
   Returns the required bit count given
   `capacity` - Number of elements that will be inserted
@@ -102,11 +107,6 @@ defmodule Probabilistic.BloomFilter do
     import :math, only: [log: 1, pow: 2]
 
     ceil(-capacity * log(false_positive_probability) / pow(log(2), 2))
-  end
-
-  @doc false
-  def seed_murmur_hash_fun(n) do
-    fn term -> Murmur.hash_x64_128(term, n) end
   end
 
   @doc """
