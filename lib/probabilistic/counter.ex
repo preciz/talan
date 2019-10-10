@@ -1,6 +1,9 @@
 defmodule Probabilistic.Counter do
   @moduledoc """
-  Probabilistic counter to estimate cardinality.
+  Linear probabilistic counter to estimate cardinality.
+
+  For more info about linear probabilistic counting:
+  [linear probabilistic counting](https://www.waitingforcode.com/big-data-algorithms/cardinality-estimation-linear-probabilistic-counting/read)
   """
 
   @enforce_keys [:atomics_ref, :filter_length, :hash_function]
@@ -14,6 +17,12 @@ defmodule Probabilistic.Counter do
 
   alias Probabilistic.Counter
 
+  @doc """
+  Returns a new `%Probabilistic.Counter{}` struct.
+
+  `expected_cardinality` is the max number of uniq items the counter will
+  handle with approx 1% of error rate.
+  """
   @spec new(non_neg_integer, list) :: t
   def new(expected_cardinality, options \\ []) do
     hash_function = options |> Keyword.get(:hash_function, &Murmur.hash_x64_128/1)

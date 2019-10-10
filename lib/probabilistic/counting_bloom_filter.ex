@@ -25,9 +25,9 @@ defmodule Probabilistic.CountingBloomFilter do
     * `:false_positive_probability` - a float, defaults to 0.01
     * `:hash_functions` - a list of hash functions, defaults to randomly seeded murmur
   """
-  @spec new(non_neg_integer, list) :: t
-  def new(capacity, options \\ []) do
-    bloom_filter = BF.new(capacity, options)
+  @spec new(pos_integer, list) :: t
+  def new(cardinality, options \\ []) do
+    bloom_filter = BF.new(cardinality, options)
 
     counters_bit_size = options |> Keyword.get(:counters_bit_size, 8)
     signed = options |> Keyword.get(:signed, true)

@@ -20,7 +20,7 @@ defmodule Probabilistic.BloomFilter do
   * Intersection of multiple Bloom filters
   * Estimate number of unique elements
 
-  ## Example
+  ## Examples
       iex> b = BloomFilter.new(1000)
       iex> b |> BloomFilter.put("Barna")
       iex> b |> BloomFilter.member?("Barna")
@@ -41,14 +41,19 @@ defmodule Probabilistic.BloomFilter do
         }
 
   @doc """
-  Returns a new `%Probabilistic.BloomFilter{}` for the desired `capacity`.
+  Returns a new `%Probabilistic.BloomFilter{}` for the desired `cardinality`.
 
-  ## Options:
+  ## Options
     * `:false_positive_probability` - a float, defaults to 0.01
     * `:hash_functions` - a list of hash functions, defaults to randomly seeded murmur
+
+  ## Examples
+      iex> bloom_filter = Probabilistic.BloomFilter.new(1_000_000)
+      iex> bloom_filter |> Probabilistic.BloomFilter.put("push the tempo")
+      :ok
   """
-  @spec new(non_neg_integer, list) :: t
-  def new(capacity, options \\ []) when is_integer(capacity) and capacity >= 1 do
+  @spec new(pos_integer, list) :: t
+  def new(cardinality, options \\ []) when is_integer(cardinality) and cardinality > 0 do
     false_positive_probability = options |> Keyword.get(:false_positive_probability, 0.01)
     hash_functions = options |> Keyword.get(:hash_functions, [])
 
@@ -72,7 +77,7 @@ defmodule Probabilistic.BloomFilter do
           list
       end
 
-    filter_length = required_filter_length(capacity, false_positive_probability)
+    filter_length = required_filter_length(cardinality, false_positive_probability)
 
     atomics_arity = max(div(filter_length, 64), 1)
 
@@ -89,6 +94,10 @@ defmodule Probabilistic.BloomFilter do
   Returns count of required hash functions for `filter_length` and `false_positive_probability`
 
   [Wikipedia](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions)
+
+  ## Example
+      iex> Probabilistic.BloomFilter.required_hash_function_count(0.01)
+      7
   """
   def required_hash_function_count(false_positive_probability) do
     -:math.log2(false_positive_probability) |> ceil()
@@ -96,17 +105,17 @@ defmodule Probabilistic.BloomFilter do
 
   @doc """
   Returns the required bit count given
-  `capacity` - Number of elements that will be inserted
+  `cardinality` - Number of elements that will be inserted
   `false_positive_probability` - Desired false positive probability of membership
 
   [Wikipedia](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions)
   """
-  def required_filter_length(capacity, false_positive_probability)
-      when is_integer(capacity) and capacity > 0 and false_positive_probability > 0 and
+  def required_filter_length(cardinality, false_positive_probability)
+      when is_integer(cardinality) and cardinality > 0 and false_positive_probability > 0 and
              false_positive_probability < 1 do
     import :math, only: [log: 1, pow: 2]
 
-    ceil(-capacity * log(false_positive_probability) / pow(log(2), 2))
+    ceil(-cardinality * log(false_positive_probability) / pow(log(2), 2))
   end
 
   @doc """

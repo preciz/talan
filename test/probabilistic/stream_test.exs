@@ -4,7 +4,10 @@ defmodule Probabilistic.StreamTest do
   doctest Probabilistic.Stream
 
   test "rejects non uniq elements" do
-    uniq_list = ~w(a b c a b c d) |> Probabilistic.Stream.uniq |> Enum.to_list
+    list = ~w(a b c a b c d a)
+
+    bloom_filter = Probabilistic.BloomFilter.new(1000, false_positive_probability: 0.01)
+    uniq_list = Probabilistic.Stream.uniq(list, bloom_filter) |> Enum.to_list
 
     assert ["a", "b", "c", "d"] == uniq_list
   end
