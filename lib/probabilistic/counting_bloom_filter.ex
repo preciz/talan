@@ -1,6 +1,8 @@
 defmodule Probabilistic.CountingBloomFilter do
   @moduledoc """
-  Counting bloom filters support probabilistic deletion of elements.
+  Counting bloom filters support probabilistic deletion
+  of elements but have higher memory consumption.
+  They need to store a counter of N bits for every bloom filter bit.
   """
 
   alias Probabilistic.BloomFilter, as: BF
@@ -11,7 +13,7 @@ defmodule Probabilistic.CountingBloomFilter do
 
   @type t :: %__MODULE__{
           bloom_filter: reference,
-          counter: reference
+          counter: Abit.Counter.t()
         }
 
   @doc """
@@ -52,6 +54,7 @@ defmodule Probabilistic.CountingBloomFilter do
 
   Returns `:ok`.
   """
+  @spec put(t, any) :: :ok
   def put(%CBF{bloom_filter: bloom_filter, counter: counter}, term) do
     hashes = BF.hash_term(bloom_filter, term)
 
