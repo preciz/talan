@@ -6,7 +6,13 @@ defmodule Probabilistic.CountingBloomFilter do
   alias Probabilistic.BloomFilter, as: BF
   alias Probabilistic.CountingBloomFilter, as: CBF
 
+  @enforce_keys [:bloom_filter, :counter]
   defstruct [:bloom_filter, :counter]
+
+  @type t :: %__MODULE__{
+          bloom_filter: reference,
+          counter: reference
+        }
 
   @doc """
   ## Counter options:
@@ -17,6 +23,7 @@ defmodule Probabilistic.CountingBloomFilter do
     * `:false_positive_probability` - a float, defaults to 0.01
     * `:hash_functions` - a list of hash functions, defaults to randomly seeded murmur
   """
+  @spec new(non_neg_integer, list) :: t
   def new(capacity, options \\ []) do
     bloom_filter = BF.new(capacity, options)
 
@@ -62,6 +69,7 @@ defmodule Probabilistic.CountingBloomFilter do
   Probabilistically delete `term` from `bloom_filter` and
   decrement counters in `counter`.
   """
+  @spec delete(t, any) :: :ok
   def delete(%CBF{bloom_filter: bloom_filter, counter: counter}, term) do
     hashes = BF.hash_term(bloom_filter, term)
 
@@ -81,6 +89,7 @@ defmodule Probabilistic.CountingBloomFilter do
   See `Probabilistic.BloomFilter.member?/2` for
   docs.
   """
+  @spec member?(t, any) :: boolean
   def member?(%CBF{bloom_filter: bloom_filter}, term) do
     BF.member?(bloom_filter, term)
   end
@@ -88,6 +97,7 @@ defmodule Probabilistic.CountingBloomFilter do
   @doc """
   Returns probabilistic count of term in `counter`.
   """
+  @spec count(t, any) :: non_neg_integer
   def count(%CBF{bloom_filter: bloom_filter, counter: counter}, term) do
     hashes = BF.hash_term(bloom_filter, term)
 
@@ -101,18 +111,20 @@ defmodule Probabilistic.CountingBloomFilter do
   end
 
   @doc """
-  See `Probabilistic.BloomFilter.estimate_element_count/1` for
+  See `Probabilistic.BloomFilter.cardinality/1` for
   docs.
   """
-  def estimate_element_count(%CBF{bloom_filter: bloom_filter}) do
-    BF.estimate_element_count(bloom_filter)
+  @spec cardinality(t) :: non_neg_integer
+  def cardinality(%CBF{bloom_filter: bloom_filter}) do
+    BF.cardinality(bloom_filter)
   end
 
   @doc """
-  See `Probabilistic.BloomFilter.current_false_positive_probability/1` for
+  See `Probabilistic.BloomFilter.false_positive_probability/1` for
   docs.
   """
-  def current_false_positive_probability(%CBF{bloom_filter: bloom_filter}) do
-    BF.current_false_positive_probability(bloom_filter)
+  @spec false_positive_probability(t) :: float
+  def false_positive_probability(%CBF{bloom_filter: bloom_filter}) do
+    BF.false_positive_probability(bloom_filter)
   end
 end

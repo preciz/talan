@@ -1,13 +1,20 @@
 defmodule Probabilistic.Counter do
   @moduledoc """
+  Probabilistic counter to estimate cardinality.
   """
 
   @enforce_keys [:atomics_ref, :filter_length, :hash_function]
   defstruct [:atomics_ref, :filter_length, :hash_function]
 
+  @type t :: %__MODULE__{
+          atomics_ref: reference,
+          filter_length: non_neg_integer,
+          hash_function: function
+        }
+
   alias Probabilistic.Counter
 
-  @spec new(non_neg_integer, list) :: map
+  @spec new(non_neg_integer, list) :: t
   def new(expected_cardinality, options \\ []) do
     hash_function = options |> Keyword.get(:hash_function, &Murmur.hash_x64_128/1)
     # good defaults
@@ -20,20 +27,25 @@ defmodule Probabilistic.Counter do
     }
   end
 
-  @spec put(map, any) :: :ok
+  @doc """
+  """
+  @spec put(t, any) :: :ok
   def put(%Counter{} = counter, term) do
     hash = rem(counter.hash_function.(term), counter.filter_length)
 
     Abit.set_bit(counter.atomics_ref, hash, 1)
   end
 
-  @spec count(map) :: non_neg_integer
-  def count(%Counter{atomics_ref: atomics_ref}) do
+  @doc """
+  Returns the estimated cardinality (Estimated uniq element count)
+  for the given `%Probabilistic.Counter{}` struct.
+  """
+  @spec cardinality(t) :: non_neg_integer
+  def cardinality(%Counter{atomics_ref: atomics_ref}) do
     bit_count = Abit.bit_count(atomics_ref)
     set_bit_count = Abit.set_bits_count(atomics_ref)
     unset_bit_count = bit_count - set_bit_count
 
-    -bit_count * :math.log(unset_bit_count / bit_count)
+    round(-bit_count * :math.log(unset_bit_count / bit_count))
   end
 end
-

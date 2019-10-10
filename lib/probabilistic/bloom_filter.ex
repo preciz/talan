@@ -34,6 +34,12 @@ defmodule Probabilistic.BloomFilter do
   @enforce_keys [:atomics_ref, :filter_length, :hash_functions]
   defstruct [:atomics_ref, :filter_length, :hash_functions]
 
+  @type t :: %__MODULE__{
+          atomics_ref: reference,
+          filter_length: non_neg_integer,
+          hash_functions: list
+        }
+
   @doc """
   Returns a new `%Probabilistic.BloomFilter{}` for the desired `capacity`.
 
@@ -41,11 +47,12 @@ defmodule Probabilistic.BloomFilter do
     * `:false_positive_probability` - a float, defaults to 0.01
     * `:hash_functions` - a list of hash functions, defaults to randomly seeded murmur
   """
+  @spec new(non_neg_integer, list) :: t
   def new(capacity, options \\ []) when is_integer(capacity) and capacity >= 1 do
     false_positive_probability = options |> Keyword.get(:false_positive_probability, 0.01)
     hash_functions = options |> Keyword.get(:hash_functions, [])
 
-    if (false_positive_probability <= 0) || (false_positive_probability >= 1) do
+    if false_positive_probability <= 0 || false_positive_probability >= 1 do
       raise ArgumentError, """
       false_positive_probability must be a float between 0 and 1.
       E.g. 0.01
@@ -59,7 +66,7 @@ defmodule Probabilistic.BloomFilter do
         [] ->
           hash_count = required_hash_function_count(false_positive_probability)
 
-          seed_hash_functions(hash_count)
+          Probabilistic.seed_n_murmur_hash_fun(hash_count)
 
         list ->
           list
@@ -78,12 +85,6 @@ defmodule Probabilistic.BloomFilter do
     }
   end
 
-  @doc false
-  def seed_hash_functions(hash_count) do
-    Enum.take_random(1..(hash_count * 2), hash_count)
-    |> Enum.map(&seed_murmur_hash_fun/1)
-  end
-
   @doc """
   Returns count of required hash functions for `filter_length` and `false_positive_probability`
 
@@ -91,11 +92,6 @@ defmodule Probabilistic.BloomFilter do
   """
   def required_hash_function_count(false_positive_probability) do
     -:math.log2(false_positive_probability) |> ceil()
-  end
-
-  @doc false
-  def seed_murmur_hash_fun(n) do
-    fn term -> Murmur.hash_x64_128(term, n) end
   end
 
   @doc """
@@ -169,11 +165,13 @@ defmodule Probabilistic.BloomFilter do
   end
 
   defp do_hash_term(filter_length, hash_functions, term, acc \\ [])
+
   defp do_hash_term(filter_length, [hash_fun | tl], term, acc) do
     new_acc = [rem(hash_fun.(term), filter_length) | acc]
 
     do_hash_term(filter_length, tl, term, new_acc)
   end
+
   defp do_hash_term(_, [], _, acc), do: acc
 
   @doc """
@@ -210,8 +208,7 @@ defmodule Probabilistic.BloomFilter do
   Returns a new `%BloomFilter{}` struct which set bits are the intersection
   the bloom filters in the `list`.
   """
-  def intersection([]), do: []
-
+  @spec intersection(nonempty_list(t)) :: t
   def intersection(list = [first = %BF{atomics_ref: first_atomics_ref} | _tl]) do
     %{size: size} = :atomics.info(first_atomics_ref)
 
@@ -231,11 +228,11 @@ defmodule Probabilistic.BloomFilter do
   end
 
   @doc """
-  Estimates count of unique elemenets in the filter.
-
-  Returns an integer >= 0.
+  Returns an non negative integer representing the
+  estimated cardinality count of unique elements in the filter.
   """
-  def estimate_element_count(%BF{
+  @spec cardinality(t) :: non_neg_integer
+  def cardinality(%BF{
         atomics_ref: atomics_ref,
         filter_length: filter_length,
         hash_functions: hash_functions
@@ -244,35 +241,29 @@ defmodule Probabilistic.BloomFilter do
 
     hash_function_count = length(hash_functions)
 
-    estimate_element_count(filter_length, set_bits_count, hash_function_count)
-  end
+    cond do
+      set_bits_count < hash_function_count ->
+        0
 
-  def estimate_element_count(_, set_bits_count, hash_function_count)
-      when set_bits_count < hash_function_count do
-    0
-  end
+      set_bits_count == hash_function_count ->
+        1
 
-  def estimate_element_count(_, set_bits_count, hash_function_count)
-      when set_bits_count == hash_function_count do
-    1
-  end
+      filter_length == set_bits_count ->
+        round(filter_length / hash_function_count)
 
-  def estimate_element_count(filter_length, set_bits_count, hash_function_count)
-      when filter_length == set_bits_count do
-    round(filter_length / hash_function_count)
-  end
+      true ->
+        est = :math.log(filter_length - set_bits_count) - :math.log(filter_length)
 
-  def estimate_element_count(filter_length, set_bits_count, hash_function_count) do
-    est = :math.log(filter_length - set_bits_count) - :math.log(filter_length)
-
-    round(filter_length * -est / hash_function_count)
+        round(filter_length * -est / hash_function_count)
+    end
   end
 
   @doc """
   Returns a float representing current estimated
   false positivity probability.
   """
-  def current_false_positive_probability(%BF{
+  @spec false_positive_probability(t()) :: float()
+  def false_positive_probability(%BF{
         atomics_ref: atomics_ref,
         filter_length: filter_length,
         hash_functions: hash_functions
@@ -281,12 +272,15 @@ defmodule Probabilistic.BloomFilter do
 
     hash_function_count = length(hash_functions)
 
-    :math.pow(1 - (bits_not_set_count / filter_length), hash_function_count)
+    :math.pow(1 - bits_not_set_count / filter_length, hash_function_count)
   end
 
   @doc """
-  Returns a map with general info.
+  Returns a map representing the bit state of the `atomics_ref`.
+
+  Use this for debugging purposes.
   """
+  @spec bits_info(t()) :: map()
   def bits_info(%BF{atomics_ref: atomics_ref, filter_length: filter_length}) do
     set_bits_count = Abit.set_bits_count(atomics_ref)
 
