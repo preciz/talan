@@ -91,11 +91,13 @@ defmodule Probabilistic.CountingBloomFilter do
   def count(%CBF{bloom_filter: bloom_filter, counter: counter}, term) do
     hashes = BF.hash_term(bloom_filter, term)
 
-    hashes
-    |> Enum.map(fn hash ->
-      Abit.Counter.get(counter, hash)
-    end)
-    |> Enum.min()
+    counters =
+      hashes
+      |> Enum.map(fn hash ->
+        Abit.Counter.get(counter, hash)
+      end)
+
+    Enum.sum(counters) / length(counters)
   end
 
   @doc """
