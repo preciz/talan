@@ -39,8 +39,9 @@ defmodule Probabilistic.CountingBloomFilter do
   @doc """
   Puts `term` into `bloom_filter` and increments counters in `counter`.
 
-  After this the `member?` function will always return `true`
-  for the membership of `term`.
+  After this the `member?/2` function will return `true`
+  for the membership of `term` unless bits representing
+  membership are modified by the `delete/2` function.
 
   Returns `:ok`.
   """
