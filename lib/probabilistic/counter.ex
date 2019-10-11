@@ -1,6 +1,7 @@
 defmodule Probabilistic.Counter do
   @moduledoc """
   Linear probabilistic counter to estimate cardinality.
+  Cardinality is the count of unique elements.
 
   For more info about linear probabilistic counting:
   [linear probabilistic counting](https://www.waitingforcode.com/big-data-algorithms/cardinality-estimation-linear-probabilistic-counting/read)
@@ -22,6 +23,17 @@ defmodule Probabilistic.Counter do
 
   `expected_cardinality` is the max number of uniq items the counter will
   handle with approx 1% of error rate.
+
+  ## Options
+    * `hash_function` - defaults to `Murmur.hash_x64_128/1`
+
+  ## Examples
+      iex> c = Probabilistic.Counter.new(10_000)
+      iex> c |> Probabilistic.Counter.put(["you", :can, Hash, {"any", "elixir", "term"}])
+      iex> c |> Probabilistic.Counter.put("more")
+      iex> c |> Probabilistic.Counter.put("another")
+      iex> c |> Probabilistic.Counter.cardinality()
+      3
   """
   @spec new(non_neg_integer, list) :: t
   def new(expected_cardinality, options \\ []) do
@@ -37,17 +49,40 @@ defmodule Probabilistic.Counter do
   end
 
   @doc """
+  Hashes `term` and sets a bit to mark it has been seen.
+
+  Doesn't store the `term` so it's space efficient.
+  Uses `:atomics` so it's mutable & highly concurrent.
+
+  Returns `:ok`.
+
+  ## Examples
+      iex> c = Probabilistic.Counter.new(10_000)
+      iex> c |> Probabilistic.Counter.put(["you", :can, Hash, {"any", "elixir", "term"}])
+      :ok
   """
   @spec put(t, any) :: :ok
   def put(%Counter{} = counter, term) do
     hash = rem(counter.hash_function.(term), counter.filter_length)
 
     Abit.set_bit(counter.atomics_ref, hash, 1)
+
+    :ok
   end
 
   @doc """
-  Returns the estimated cardinality (Estimated uniq element count)
-  for the given `%Probabilistic.Counter{}` struct.
+  Returns the estimated cardinality for the given
+  `%Probabilistic.Counter{}` struct.
+
+  ## Examples
+      iex> c = Probabilistic.Counter.new(10_000)
+      iex> c |> Probabilistic.Counter.put(["you", :can, Hash, {"any", "elixir", "term"}])
+      iex> c |> Probabilistic.Counter.put(["you", :can, Hash, {"any", "elixir", "term"}])
+      iex> c |> Probabilistic.Counter.cardinality()
+      1
+      iex> c |> Probabilistic.Counter.put("more")
+      iex> c |> Probabilistic.Counter.cardinality()
+      2
   """
   @spec cardinality(t) :: non_neg_integer
   def cardinality(%Counter{atomics_ref: atomics_ref}) do
