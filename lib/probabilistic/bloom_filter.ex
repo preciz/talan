@@ -43,6 +43,9 @@ defmodule Probabilistic.BloomFilter do
   @doc """
   Returns a new `%Probabilistic.BloomFilter{}` for the desired `cardinality`.
 
+  `cardinality` is the expected number of unique items. Duplicated items
+  can be infinite.
+
   ## Options
     * `:false_positive_probability` - a float, defaults to 0.01
     * `:hash_functions` - a list of hash functions, defaults to randomly seeded murmur
@@ -91,13 +94,18 @@ defmodule Probabilistic.BloomFilter do
   end
 
   @doc """
-  Returns count of required hash functions for `filter_length` and `false_positive_probability`
+  Returns count of required hash functions for the
+  given `false_positive_probability`.
 
   [Wikipedia](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions)
 
-  ## Example
+  ## Examples
       iex> Probabilistic.BloomFilter.required_hash_function_count(0.01)
       7
+      iex> Probabilistic.BloomFilter.required_hash_function_count(0.001)
+      10
+      iex> Probabilistic.BloomFilter.required_hash_function_count(0.0001)
+      14
   """
   def required_hash_function_count(false_positive_probability) do
     -:math.log2(false_positive_probability) |> ceil()
@@ -105,8 +113,9 @@ defmodule Probabilistic.BloomFilter do
 
   @doc """
   Returns the required bit count given
-  `cardinality` - Number of elements that will be inserted
-  `false_positive_probability` - Desired false positive probability of membership
+
+  * `cardinality` - Number of unqiue elements that will be inserted
+  * `false_positive_probability` - Desired false positive probability of membership
 
   [Wikipedia](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions)
   """

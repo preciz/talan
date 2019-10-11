@@ -17,13 +17,25 @@ defmodule Probabilistic.CountingBloomFilter do
         }
 
   @doc """
-  ## Counter options:
-    * `:counters_bit_size` - bit size of counters, defaults to 8
-    * `:signed` - to have signed or unsigned counters
+  Returns a new `%Probabilistic.CountingBloomFilter{}` struct.
 
-  ## BloomFilter options:
-    * `:false_positive_probability` - a float, defaults to 0.01
+  `cardinality` is the expected number of unique items. Duplicated items
+  can be infinite.
+
+  ## Options
+    * `:counters_bit_size` - bit size of counters, defaults to `8`
+    * `:signed` - to have signed or unsigned counters, defaults to `true`
+    * `:false_positive_probability` - a float, defaults to `0.01`
     * `:hash_functions` - a list of hash functions, defaults to randomly seeded murmur
+
+  ## Examples
+      iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
+      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
+      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
+      iex> cbf |> Probabilistic.CountingBloomFilter.put("phone")
+      :ok
+      iex> cbf |> Probabilistic.CountingBloomFilter.count("hat")
+      2
   """
   @spec new(pos_integer, list) :: t
   def new(cardinality, options \\ []) do
@@ -53,6 +65,11 @@ defmodule Probabilistic.CountingBloomFilter do
   membership are modified by the `delete/2` function.
 
   Returns `:ok`.
+
+  ## Examples
+      iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
+      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
+      :ok
   """
   @spec put(t, any) :: :ok
   def put(%CBF{bloom_filter: bloom_filter, counter: counter}, term) do
@@ -71,6 +88,19 @@ defmodule Probabilistic.CountingBloomFilter do
   @doc """
   Probabilistically delete `term` from `bloom_filter` and
   decrement counters in `counter`.
+
+  ## Examples
+      iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
+      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
+      iex> cbf |> Probabilistic.CountingBloomFilter.count("hat")
+      1
+      iex> cbf |> Probabilistic.CountingBloomFilter.delete("hat")
+      :ok
+      iex> cbf |> Probabilistic.CountingBloomFilter.count("hat")
+      0
+      iex> cbf |> Probabilistic.CountingBloomFilter.delete("this wasn't there")
+      iex> cbf |> Probabilistic.CountingBloomFilter.count("this wasn't there")
+      -1
   """
   @spec delete(t, any) :: :ok
   def delete(%CBF{bloom_filter: bloom_filter, counter: counter}, term) do
@@ -89,8 +119,13 @@ defmodule Probabilistic.CountingBloomFilter do
   end
 
   @doc """
-  See `Probabilistic.BloomFilter.member?/2` for
-  docs.
+  See `Probabilistic.BloomFilter.member?/2` for docs.
+
+  ## Examples
+      iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
+      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
+      iex> cbf |> Probabilistic.CountingBloomFilter.member?("hat")
+      true
   """
   @spec member?(t, any) :: boolean
   def member?(%CBF{bloom_filter: bloom_filter}, term) do
@@ -99,6 +134,19 @@ defmodule Probabilistic.CountingBloomFilter do
 
   @doc """
   Returns probabilistic count of term in `counter`.
+
+  This means that (given no hash collisions) it returns how many times
+  the item was put into the CountingBloomFilter. A few hash collisions
+  should be also fine since it returns the average count of the counters.
+  An single item is hashed with multiple counters.
+
+  ## Examples
+      iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
+      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
+      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
+      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
+      iex> cbf |> Probabilistic.CountingBloomFilter.count("hat")
+      3
   """
   @spec count(t, any) :: non_neg_integer
   def count(%CBF{bloom_filter: bloom_filter, counter: counter}, term) do
@@ -110,12 +158,20 @@ defmodule Probabilistic.CountingBloomFilter do
         Abit.Counter.get(counter, hash)
       end)
 
-    Enum.sum(counters) / length(counters)
+    round(Enum.sum(counters) / length(counters))
   end
 
   @doc """
-  See `Probabilistic.BloomFilter.cardinality/1` for
-  docs.
+  See `Probabilistic.BloomFilter.cardinality/1` for docs.
+
+  ## Examples
+      iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
+      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
+      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
+      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
+      iex> cbf |> Probabilistic.CountingBloomFilter.put("car keys")
+      iex> cbf |> Probabilistic.CountingBloomFilter.cardinality()
+      2
   """
   @spec cardinality(t) :: non_neg_integer
   def cardinality(%CBF{bloom_filter: bloom_filter}) do
