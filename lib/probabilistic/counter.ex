@@ -38,6 +38,7 @@ defmodule Probabilistic.Counter do
   @spec new(non_neg_integer, list) :: t
   def new(expected_cardinality, options \\ []) do
     hash_function = options |> Keyword.get(:hash_function, &Murmur.hash_x64_128/1)
+
     # good defaults
     required_size = max(1, floor(expected_cardinality * 10 / 64))
 
