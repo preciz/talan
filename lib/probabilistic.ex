@@ -1,7 +1,7 @@
 defmodule Probabilistic do
   @moduledoc """
-  Probabilistic data structures built on top of :atomics
-  for concurrency and speed.
+  Fast & concurrent probabilistic data structures
+  built on top of :atomics.
   """
 
   @doc false
