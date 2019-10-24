@@ -21,6 +21,7 @@ defmodule Talan.BloomFilter do
     * Merge multiple Bloom filters into one
     * Intersect multiple Bloom filters into one
     * Estimate number of unique elements
+    * Estimate false positive probability
 
   ## Examples
 
@@ -101,7 +102,7 @@ defmodule Talan.BloomFilter do
   Returns count of required hash functions for the
   given `false_positive_probability`.
 
-  [Wikipedia](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions)
+  [Wikipedia - Bloom filter - Optimal number of hash functions](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions)
 
   ## Examples
 

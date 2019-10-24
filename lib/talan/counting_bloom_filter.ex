@@ -3,6 +3,14 @@ defmodule Talan.CountingBloomFilter do
   Counting bloom filter implementation with **concurrent accessibility**,
   powered by [:atomics](http://erlang.org/doc/man/atomics.html) module.
 
+  ## Features
+
+    * Fixed size Counting Bloom filter
+    * Concurrent reads & writes
+    * Custom & default hash functions
+    * Estimate number of unique elements
+    * Estimate false positive probability
+
   Counting bloom filters support probabilistic deletion
   of elements but have higher memory consumption becuase
   they need to store a counter of N bits for every bloom filter bit.
@@ -91,7 +99,7 @@ defmodule Talan.CountingBloomFilter do
   end
 
   @doc """
-  Talanally delete `term` from `bloom_filter` and
+  Probabilistically delete `term` from `bloom_filter` and
   decrement counters in `counter`.
 
   ## Examples

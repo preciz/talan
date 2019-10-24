@@ -3,9 +3,9 @@ defmodule Talan do
   Fast & concurrent probabilistic data structures
   built on top of :atomics with **concurrent accessibility**.
 
-  `Talan.BloomFilter` - bloom filter based on `:atomics`
-  `Talan.CountingBloomFilter` - counting bloom filter based on `:atomics`
-  `Talan.Counter` - linear probabilistic counter based on `:atomics`
+    * `Talan.BloomFilter` - bloom filter based on `:atomics`
+    * `Talan.CountingBloomFilter` - counting bloom filter based on `:atomics`
+    * `Talan.Counter` - linear probabilistic counter based on `:atomics`
   """
 
   @doc false

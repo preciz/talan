@@ -2,7 +2,7 @@
 
 Probabilistic data structures in Elixir:
   * Bloom filter for membership estimation
-  * Counting bloom filter membership & cardinality estimation with delete support
+  * Counting bloom filter for membership & cardinality estimation with delete support
   * Linear probabilistic counter for cardinality estimation
 
 Documentation can be found at [https://hexdocs.pm/talan](https://hexdocs.pm/talan).
