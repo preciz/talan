@@ -12,7 +12,7 @@ defmodule Talan.CountingBloomFilter do
     * Estimate false positive probability
 
   Counting bloom filters support probabilistic deletion
-  of elements but have higher memory consumption becuase
+  of elements but have higher memory consumption because
   they need to store a counter of N bits for every bloom filter bit.
   """
 
