@@ -28,6 +28,7 @@ defmodule Probabilistic.Counter do
     * `hash_function` - defaults to `Murmur.hash_x64_128/1`
 
   ## Examples
+
       iex> c = Probabilistic.Counter.new(10_000)
       iex> c |> Probabilistic.Counter.put(["you", :can, Hash, {"any", "elixir", "term"}])
       iex> c |> Probabilistic.Counter.put("more")
@@ -58,6 +59,7 @@ defmodule Probabilistic.Counter do
   Returns `:ok`.
 
   ## Examples
+
       iex> c = Probabilistic.Counter.new(10_000)
       iex> c |> Probabilistic.Counter.put(["you", :can, Hash, {"any", "elixir", "term"}])
       :ok
@@ -76,6 +78,7 @@ defmodule Probabilistic.Counter do
   `%Probabilistic.Counter{}` struct.
 
   ## Examples
+
       iex> c = Probabilistic.Counter.new(10_000)
       iex> c |> Probabilistic.Counter.put(["you", :can, Hash, {"any", "elixir", "term"}])
       iex> c |> Probabilistic.Counter.put(["you", :can, Hash, {"any", "elixir", "term"}])

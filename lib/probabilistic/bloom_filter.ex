@@ -1,26 +1,29 @@
 defmodule Probabilistic.BloomFilter do
   @moduledoc """
-  Bloom filter implementation with **concurrent accessibility**, powered by [`:atomics`](http://erlang.org/doc/man/atomics.html) module.
+  Bloom filter implementation with **concurrent accessibility**,
+  powered by [:atomics](http://erlang.org/doc/man/atomics.html) module.
 
   "A Bloom filter is a space-efficient probabilistic data structure,
   conceived by Burton Howard Bloom in 1970,
   that is used to test whether an element is a member of a set"
 
-  [Wikipedia](https://en.wikipedia.org/wiki/Bloom_filter#CITEREFZhiwangJungangJian2010)
+  [Bloom filter on Wikipedia](https://en.wikipedia.org/wiki/Bloom_filter#CITEREFZhiwangJungangJian2010)
 
-  ## Credits
+  ## Credit
+
   Partly inspired by [Blex](https://github.com/gyson/blex)
 
   ## Features
 
-  * Fixed size Bloom filter
-  * Concurrent reads & writes
-  * Custom & default hash functions
-  * Merge multiple Bloom filters into one
-  * Intersection of multiple Bloom filters
-  * Estimate number of unique elements
+    * Fixed size Bloom filter
+    * Concurrent reads & writes
+    * Custom & default hash functions
+    * Merge multiple Bloom filters into one
+    * Intersect multiple Bloom filters into one
+    * Estimate number of unique elements
 
   ## Examples
+
       iex> b = BloomFilter.new(1000)
       iex> b |> BloomFilter.put("Barna")
       iex> b |> BloomFilter.member?("Barna")
@@ -51,8 +54,9 @@ defmodule Probabilistic.BloomFilter do
     * `:hash_functions` - a list of hash functions, defaults to randomly seeded murmur
 
   ## Examples
+
       iex> bloom_filter = Probabilistic.BloomFilter.new(1_000_000)
-      iex> bloom_filter |> Probabilistic.BloomFilter.put("push the tempo")
+      iex> bloom_filter |> Probabilistic.BloomFilter.put("Barna Kovacs")
       :ok
   """
   @spec new(pos_integer, list) :: t
@@ -100,6 +104,7 @@ defmodule Probabilistic.BloomFilter do
   [Wikipedia](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions)
 
   ## Examples
+
       iex> Probabilistic.BloomFilter.required_hash_function_count(0.01)
       7
       iex> Probabilistic.BloomFilter.required_hash_function_count(0.001)
@@ -114,10 +119,10 @@ defmodule Probabilistic.BloomFilter do
   @doc """
   Returns the required bit count given
 
-  * `cardinality` - Number of unqiue elements that will be inserted
+  * `cardinality` - Number of unique elements that will be inserted
   * `false_positive_probability` - Desired false positive probability of membership
 
-  [Wikipedia](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions)
+  [Wikipedia - Bloom filter - Optimal number of hash functions](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions)
   """
   def required_filter_length(cardinality, false_positive_probability)
       when is_integer(cardinality) and cardinality > 0 and false_positive_probability > 0 and

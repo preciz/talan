@@ -1,7 +1,11 @@
 defmodule Probabilistic do
   @moduledoc """
   Fast & concurrent probabilistic data structures
-  built on top of :atomics.
+  built on top of :atomics with **concurrent accessibility**.
+
+  `Probabilistic.BloomFilter` - bloom filter based on `:atomics`
+  `Probabilistic.CountingBloomFilter` - counting bloom filter based on `:atomics`
+  `Probabilistic.Counter` - linear probabilistic counter based on `:atomics`
   """
 
   @doc false

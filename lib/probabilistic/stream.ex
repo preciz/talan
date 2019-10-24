@@ -15,6 +15,7 @@ defmodule Probabilistic.Stream do
   get rejected.
 
   ## Examples
+
       iex> list = ["a", "b", "c", "a", "b"]
       iex> bloom_filter = Probabilistic.BloomFilter.new(100_000, false_positive_probability: 0.001)
       iex> Probabilistic.Stream.uniq(list, bloom_filter) |> Enum.to_list

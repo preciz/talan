@@ -1,8 +1,8 @@
 defmodule Probabilistic.CountingBloomFilter do
   @moduledoc """
   Counting bloom filters support probabilistic deletion
-  of elements but have higher memory consumption.
-  They need to store a counter of N bits for every bloom filter bit.
+  of elements but have higher memory consumption becuase
+  they need to store a counter of N bits for every bloom filter bit.
   """
 
   alias Probabilistic.BloomFilter, as: BF
@@ -29,6 +29,7 @@ defmodule Probabilistic.CountingBloomFilter do
     * `:hash_functions` - a list of hash functions, defaults to randomly seeded murmur
 
   ## Examples
+
       iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
       iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
       iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
@@ -67,6 +68,7 @@ defmodule Probabilistic.CountingBloomFilter do
   Returns `:ok`.
 
   ## Examples
+
       iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
       iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
       :ok
@@ -90,6 +92,7 @@ defmodule Probabilistic.CountingBloomFilter do
   decrement counters in `counter`.
 
   ## Examples
+
       iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
       iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
       iex> cbf |> Probabilistic.CountingBloomFilter.count("hat")
@@ -122,6 +125,7 @@ defmodule Probabilistic.CountingBloomFilter do
   See `Probabilistic.BloomFilter.member?/2` for docs.
 
   ## Examples
+
       iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
       iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
       iex> cbf |> Probabilistic.CountingBloomFilter.member?("hat")
@@ -141,6 +145,7 @@ defmodule Probabilistic.CountingBloomFilter do
   An single item is hashed with multiple counters.
 
   ## Examples
+
       iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
       iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
       iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
@@ -165,6 +170,7 @@ defmodule Probabilistic.CountingBloomFilter do
   See `Probabilistic.BloomFilter.cardinality/1` for docs.
 
   ## Examples
+
       iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
       iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
       iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
