@@ -48,6 +48,8 @@ defmodule Talan.CountingBloomFilter do
       :ok
       iex> cbf |> Talan.CountingBloomFilter.count("hat")
       2
+      iex> cbf |> Talan.CountingBloomFilter.count("phone")
+      1
   """
   @spec new(pos_integer, list) :: t
   def new(cardinality, options \\ []) do
