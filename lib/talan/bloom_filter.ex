@@ -21,7 +21,7 @@ defmodule Talan.BloomFilter do
     * Merge multiple Bloom filters into one
     * Intersect multiple Bloom filters into one
     * Estimate number of unique elements
-    * Estimate false positive probability
+    * Estimate current false positive probability
 
   ## Examples
 
