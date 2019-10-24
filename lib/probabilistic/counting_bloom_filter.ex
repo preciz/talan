@@ -1,5 +1,8 @@
 defmodule Probabilistic.CountingBloomFilter do
   @moduledoc """
+  Counting bloom filter implementation with **concurrent accessibility**,
+  powered by [:atomics](http://erlang.org/doc/man/atomics.html) module.
+
   Counting bloom filters support probabilistic deletion
   of elements but have higher memory consumption becuase
   they need to store a counter of N bits for every bloom filter bit.

@@ -1,6 +1,8 @@
 defmodule Probabilistic.Counter do
   @moduledoc """
-  Linear probabilistic counter to estimate cardinality.
+  Linear probabilistic counter implementation with **concurrent accessibility**,
+  powered by [:atomics](http://erlang.org/doc/man/atomics.html) module for cardinality estimation.
+
   Cardinality is the count of unique elements.
 
   For more info about linear probabilistic counting:
