@@ -112,6 +112,7 @@ defmodule Talan.BloomFilter do
       iex> Talan.BloomFilter.required_hash_function_count(0.0001)
       14
   """
+  @spec required_hash_function_count(float) :: non_neg_integer
   def required_hash_function_count(false_positive_probability) do
     -:math.log2(false_positive_probability) |> ceil()
   end
@@ -129,6 +130,7 @@ defmodule Talan.BloomFilter do
       iex> Talan.BloomFilter.required_filter_length(10_000, 0.01)
       95851
   """
+  @spec required_filter_length(non_neg_integer, float) :: non_neg_integer
   def required_filter_length(cardinality, false_positive_probability)
       when is_integer(cardinality) and cardinality > 0 and false_positive_probability > 0 and
              false_positive_probability < 1 do
@@ -153,6 +155,7 @@ defmodule Talan.BloomFilter do
       iex> b |> Talan.BloomFilter.put("Jose Valim")
       :ok
   """
+  @spec put(t, any) :: :ok
   def put(%BF{} = bloom_filter, term) do
     hashes = hash_term(bloom_filter, term)
 
@@ -184,6 +187,7 @@ defmodule Talan.BloomFilter do
       iex> b |> Talan.BloomFilter.member?("Barna Kovacs")
       true
   """
+  @spec member?(t, any) :: boolean
   def member?(%BF{atomics_ref: atomics_ref} = bloom_filter, term) do
     hashes = hash_term(bloom_filter, term)
 
@@ -204,7 +208,14 @@ defmodule Talan.BloomFilter do
   Hashes `term` with all `hash_functions` of `%Talan.BloomFilter{}`.
 
   Returns a list of hashed values.
+
+  ## Examples
+
+      b = Talan.BloomFilter.new(1000)
+      Talan.BloomFilter.hash_term(b, :any_term_can_be_hashed)
+      [9386, 8954, 8645, 4068, 5445, 6914, 2844]
   """
+  @spec hash_term(t, any) :: list(integer)
   def hash_term(%BF{filter_length: filter_length, hash_functions: hash_functions}, term) do
     do_hash_term(filter_length, hash_functions, term)
   end
@@ -241,7 +252,7 @@ defmodule Talan.BloomFilter do
       iex> b3 |> Talan.BloomFilter.member?("Octocat")
       true
   """
-  @spec merge(list(t)) :: t
+  @spec merge(nonempty_list(t)) :: t
   def merge(list = [first = %BF{atomics_ref: first_atomics_ref} | _tl]) do
     %{size: size} = :atomics.info(first_atomics_ref)
 
@@ -265,6 +276,21 @@ defmodule Talan.BloomFilter do
 
   Returns a new `%BloomFilter{}` struct which set bits are the intersection
   the bloom filters in the `list`.
+
+  ## Examples
+
+      iex> hash_functions = Talan.seed_n_murmur_hash_fun(7)
+      iex> b1 = Talan.BloomFilter.new(1000, hash_functions: hash_functions)
+      iex> b1 |> Talan.BloomFilter.put("GitHub")
+      iex> b2 = Talan.BloomFilter.new(1000, hash_functions: hash_functions)
+      iex> b2 |> Talan.BloomFilter.put("GitHub")
+      iex> b2 |> Talan.BloomFilter.put("Octocat")
+      :ok
+      iex> b3 = Talan.BloomFilter.intersection([b1, b2])
+      iex> b3 |> Talan.BloomFilter.member?("GitHub")
+      true
+      iex> b3 |> Talan.BloomFilter.member?("Octocat")
+      false
   """
   @spec intersection(nonempty_list(t)) :: t
   def intersection(list = [first = %BF{atomics_ref: first_atomics_ref} | _tl]) do
