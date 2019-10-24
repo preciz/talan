@@ -123,6 +123,11 @@ defmodule Probabilistic.BloomFilter do
   * `false_positive_probability` - Desired false positive probability of membership
 
   [Wikipedia - Bloom filter - Optimal number of hash functions](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions)
+
+  ## Examples
+
+      iex> Probabilistic.BloomFilter.required_filter_length(10_000, 0.01)
+      95851
   """
   def required_filter_length(cardinality, false_positive_probability)
       when is_integer(cardinality) and cardinality > 0 and false_positive_probability > 0 and
@@ -139,6 +144,14 @@ defmodule Probabilistic.BloomFilter do
   for the membership of `term`.
 
   Returns `:ok`.
+
+  ## Examples
+
+      iex> b = Probabilistic.BloomFilter.new(1000)
+      iex> b |> Probabilistic.BloomFilter.put("Chris McCord")
+      :ok
+      iex> b |> Probabilistic.BloomFilter.put("Jose Valim")
+      :ok
   """
   def put(%BF{} = bloom_filter, term) do
     hashes = hash_term(bloom_filter, term)
@@ -161,6 +174,15 @@ defmodule Probabilistic.BloomFilter do
 
   Returns `false` if not a member. (definitely not member)
   Returns `true` if maybe a member. (possibly member)
+
+  ## Examples
+
+      iex> b = Probabilistic.BloomFilter.new(1000)
+      iex> b |> Probabilistic.BloomFilter.member?("Barna Kovacs")
+      false
+      iex> b |> Probabilistic.BloomFilter.put("Barna Kovacs")
+      iex> b |> Probabilistic.BloomFilter.member?("Barna Kovacs")
+      true
   """
   def member?(%BF{atomics_ref: atomics_ref} = bloom_filter, term) do
     hashes = hash_term(bloom_filter, term)
@@ -253,6 +275,21 @@ defmodule Probabilistic.BloomFilter do
   @doc """
   Returns an non negative integer representing the
   estimated cardinality count of unique elements in the filter.
+
+  ## Examples
+
+      iex> b = Probabilistic.BloomFilter.new(1000)
+      iex> b |> Probabilistic.BloomFilter.cardinality()
+      0
+      iex> b |> Probabilistic.BloomFilter.put("Barna")
+      iex> b |> Probabilistic.BloomFilter.cardinality()
+      1
+      iex> b |> Probabilistic.BloomFilter.put("Barna")
+      iex> b |> Probabilistic.BloomFilter.cardinality()
+      1
+      iex> b |> Probabilistic.BloomFilter.put("Kovacs")
+      iex> b |> Probabilistic.BloomFilter.cardinality()
+      2
   """
   @spec cardinality(t) :: non_neg_integer
   def cardinality(%BF{
@@ -284,6 +321,17 @@ defmodule Probabilistic.BloomFilter do
   @doc """
   Returns a float representing current estimated
   false positivity probability.
+
+  ## Examples
+
+      iex> b = Probabilistic.BloomFilter.new(1000)
+      iex> b |> Probabilistic.BloomFilter.false_positive_probability()
+      0.0 # fpp zero when bloom filter is empty
+      iex> b |> Probabilistic.BloomFilter.put("Barna") # fpp increase
+      iex> b |> Probabilistic.BloomFilter.put("Kovacs")
+      iex> fpp = b |> Probabilistic.BloomFilter.false_positive_probability()
+      iex> fpp > 0 && fpp < 1
+      true
   """
   @spec false_positive_probability(t()) :: float()
   def false_positive_probability(%BF{
@@ -302,6 +350,12 @@ defmodule Probabilistic.BloomFilter do
   Returns a map representing the bit state of the `atomics_ref`.
 
   Use this for debugging purposes.
+
+  ## Examples
+
+      iex> b = Probabilistic.BloomFilter.new(1000)
+      iex> b |> Probabilistic.BloomFilter.bits_info()
+      %{total_bits: 9536, set_bits_count: 0, set_ratio: 0.0}
   """
   @spec bits_info(t()) :: map()
   def bits_info(%BF{atomics_ref: atomics_ref, filter_length: filter_length}) do
