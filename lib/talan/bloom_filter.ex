@@ -226,9 +226,22 @@ defmodule Talan.BloomFilter do
 
   Returns a new `%Talan.BloomFilter{}` struct which set bits are the merged set bits of
   the bloom filters in the `list`.
-  """
-  def merge([]), do: []
 
+  ## Examples
+
+      iex> hash_functions = Talan.seed_n_murmur_hash_fun(7)
+      iex> b1 = Talan.BloomFilter.new(1000, hash_functions: hash_functions)
+      iex> b1 |> Talan.BloomFilter.put("GitHub")
+      iex> b2 = Talan.BloomFilter.new(1000, hash_functions: hash_functions)
+      iex> b2 |> Talan.BloomFilter.put("Octocat")
+      :ok
+      iex> b3 = Talan.BloomFilter.merge([b1, b2])
+      iex> b3 |> Talan.BloomFilter.member?("GitHub")
+      true
+      iex> b3 |> Talan.BloomFilter.member?("Octocat")
+      true
+  """
+  @spec merge(list(t)) :: t
   def merge(list = [first = %BF{atomics_ref: first_atomics_ref} | _tl]) do
     %{size: size} = :atomics.info(first_atomics_ref)
 
