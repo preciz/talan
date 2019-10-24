@@ -24,11 +24,11 @@ defmodule Probabilistic.BloomFilter do
 
   ## Examples
 
-      iex> b = BloomFilter.new(1000)
-      iex> b |> BloomFilter.put("Barna")
-      iex> b |> BloomFilter.member?("Barna")
+      iex> b = Probabilistic.BloomFilter.new(1000)
+      iex> b |> Probabilistic.BloomFilter.put("Barna")
+      iex> b |> Probabilistic.BloomFilter.member?("Barna")
       true
-      iex> b |> BloomFilter.member?("Kovacs")
+      iex> b |> Probabilistic.BloomFilter.member?("Kovacs")
       false
   """
 
