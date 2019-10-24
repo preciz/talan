@@ -20,4 +20,13 @@ defmodule Probabilistic do
   def seed_murmur_hash_fun(n) do
     fn term -> Murmur.hash_x64_128(term, n) end
   end
+
+  @doc false
+  def to_bitstring(<<>>) do
+    []
+  end
+
+  def to_bitstring(<<bit::1, rest::bitstring>>)do
+    [bit | to_bitstring(rest)]
+  end
 end
