@@ -70,7 +70,7 @@ defmodule Probabilistic.Counter do
   def put(%Counter{} = counter, term) do
     hash = rem(counter.hash_function.(term), counter.filter_length)
 
-    Abit.set_bit(counter.atomics_ref, hash, 1)
+    Abit.set_bit_at(counter.atomics_ref, hash, 1)
 
     :ok
   end

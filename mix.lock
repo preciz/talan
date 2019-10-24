@@ -1,4 +1,4 @@
 %{
-  "abit": {:hex, :abit, "0.1.5", "50cd1639cb441f830f4dfa8e3648faf2bd494bacba5531029aab109709e73f6b", [:mix], [], "hexpm"},
+  "abit": {:hex, :abit, "0.3.0", "876d00e263d7481c4f931e18abadf5839a05ededfdcf99d66a9d9df6cf81ea1e", [:mix], [], "hexpm"},
   "murmur": {:hex, :murmur, "1.0.1", "a6e6bced2dd0d666090a9cf3e73699f3b9176bbcf32d35b0f022f137667608e3", [:mix], [], "hexpm"},
 }

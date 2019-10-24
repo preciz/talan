@@ -12,15 +12,13 @@ defmodule Probabilistic.MixProject do
   end
 
   def application do
-    [
-      extra_applications: [:logger]
-    ]
+    []
   end
 
   defp deps do
     [
       {:murmur, "~> 1.0"},
-      {:abit, "~> 0.1"},
+      {:abit, "~> 0.3"},
     ]
   end
 end

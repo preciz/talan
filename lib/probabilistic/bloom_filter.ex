@@ -152,7 +152,7 @@ defmodule Probabilistic.BloomFilter do
   def put_hashes(%BF{atomics_ref: atomics_ref}, hashes) when is_list(hashes) do
     hashes
     |> Enum.each(fn hash ->
-      Abit.set_bit(atomics_ref, hash, 1)
+      Abit.set_bit_at(atomics_ref, hash, 1)
     end)
   end
 

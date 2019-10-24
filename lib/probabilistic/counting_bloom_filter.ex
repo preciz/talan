@@ -117,7 +117,7 @@ defmodule Probabilistic.CountingBloomFilter do
       Abit.Counter.add(counter, hash, -1)
 
       if Abit.Counter.get(counter, hash) <= 0 do
-        Abit.set_bit(bloom_filter.atomics_ref, hash, 0)
+        Abit.set_bit_at(bloom_filter.atomics_ref, hash, 0)
       end
     end)
 
