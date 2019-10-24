@@ -1,4 +1,4 @@
-defmodule Probabilistic.CountingBloomFilter do
+defmodule Talan.CountingBloomFilter do
   @moduledoc """
   Counting bloom filter implementation with **concurrent accessibility**,
   powered by [:atomics](http://erlang.org/doc/man/atomics.html) module.
@@ -8,8 +8,8 @@ defmodule Probabilistic.CountingBloomFilter do
   they need to store a counter of N bits for every bloom filter bit.
   """
 
-  alias Probabilistic.BloomFilter, as: BF
-  alias Probabilistic.CountingBloomFilter, as: CBF
+  alias Talan.BloomFilter, as: BF
+  alias Talan.CountingBloomFilter, as: CBF
 
   @enforce_keys [:bloom_filter, :counter]
   defstruct [:bloom_filter, :counter]
@@ -20,7 +20,7 @@ defmodule Probabilistic.CountingBloomFilter do
         }
 
   @doc """
-  Returns a new `%Probabilistic.CountingBloomFilter{}` struct.
+  Returns a new `%Talan.CountingBloomFilter{}` struct.
 
   `cardinality` is the expected number of unique items. Duplicated items
   can be infinite.
@@ -33,12 +33,12 @@ defmodule Probabilistic.CountingBloomFilter do
 
   ## Examples
 
-      iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
-      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
-      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
-      iex> cbf |> Probabilistic.CountingBloomFilter.put("phone")
+      iex> cbf = Talan.CountingBloomFilter.new(10_000)
+      iex> cbf |> Talan.CountingBloomFilter.put("hat")
+      iex> cbf |> Talan.CountingBloomFilter.put("hat")
+      iex> cbf |> Talan.CountingBloomFilter.put("phone")
       :ok
-      iex> cbf |> Probabilistic.CountingBloomFilter.count("hat")
+      iex> cbf |> Talan.CountingBloomFilter.count("hat")
       2
   """
   @spec new(pos_integer, list) :: t
@@ -72,8 +72,8 @@ defmodule Probabilistic.CountingBloomFilter do
 
   ## Examples
 
-      iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
-      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
+      iex> cbf = Talan.CountingBloomFilter.new(10_000)
+      iex> cbf |> Talan.CountingBloomFilter.put("hat")
       :ok
   """
   @spec put(t, any) :: :ok
@@ -91,21 +91,21 @@ defmodule Probabilistic.CountingBloomFilter do
   end
 
   @doc """
-  Probabilistically delete `term` from `bloom_filter` and
+  Talanally delete `term` from `bloom_filter` and
   decrement counters in `counter`.
 
   ## Examples
 
-      iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
-      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
-      iex> cbf |> Probabilistic.CountingBloomFilter.count("hat")
+      iex> cbf = Talan.CountingBloomFilter.new(10_000)
+      iex> cbf |> Talan.CountingBloomFilter.put("hat")
+      iex> cbf |> Talan.CountingBloomFilter.count("hat")
       1
-      iex> cbf |> Probabilistic.CountingBloomFilter.delete("hat")
+      iex> cbf |> Talan.CountingBloomFilter.delete("hat")
       :ok
-      iex> cbf |> Probabilistic.CountingBloomFilter.count("hat")
+      iex> cbf |> Talan.CountingBloomFilter.count("hat")
       0
-      iex> cbf |> Probabilistic.CountingBloomFilter.delete("this wasn't there")
-      iex> cbf |> Probabilistic.CountingBloomFilter.count("this wasn't there")
+      iex> cbf |> Talan.CountingBloomFilter.delete("this wasn't there")
+      iex> cbf |> Talan.CountingBloomFilter.count("this wasn't there")
       -1
   """
   @spec delete(t, any) :: :ok
@@ -125,13 +125,13 @@ defmodule Probabilistic.CountingBloomFilter do
   end
 
   @doc """
-  See `Probabilistic.BloomFilter.member?/2` for docs.
+  See `Talan.BloomFilter.member?/2` for docs.
 
   ## Examples
 
-      iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
-      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
-      iex> cbf |> Probabilistic.CountingBloomFilter.member?("hat")
+      iex> cbf = Talan.CountingBloomFilter.new(10_000)
+      iex> cbf |> Talan.CountingBloomFilter.put("hat")
+      iex> cbf |> Talan.CountingBloomFilter.member?("hat")
       true
   """
   @spec member?(t, any) :: boolean
@@ -149,11 +149,11 @@ defmodule Probabilistic.CountingBloomFilter do
 
   ## Examples
 
-      iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
-      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
-      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
-      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
-      iex> cbf |> Probabilistic.CountingBloomFilter.count("hat")
+      iex> cbf = Talan.CountingBloomFilter.new(10_000)
+      iex> cbf |> Talan.CountingBloomFilter.put("hat")
+      iex> cbf |> Talan.CountingBloomFilter.put("hat")
+      iex> cbf |> Talan.CountingBloomFilter.put("hat")
+      iex> cbf |> Talan.CountingBloomFilter.count("hat")
       3
   """
   @spec count(t, any) :: non_neg_integer
@@ -170,16 +170,16 @@ defmodule Probabilistic.CountingBloomFilter do
   end
 
   @doc """
-  See `Probabilistic.BloomFilter.cardinality/1` for docs.
+  See `Talan.BloomFilter.cardinality/1` for docs.
 
   ## Examples
 
-      iex> cbf = Probabilistic.CountingBloomFilter.new(10_000)
-      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
-      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
-      iex> cbf |> Probabilistic.CountingBloomFilter.put("hat")
-      iex> cbf |> Probabilistic.CountingBloomFilter.put("car keys")
-      iex> cbf |> Probabilistic.CountingBloomFilter.cardinality()
+      iex> cbf = Talan.CountingBloomFilter.new(10_000)
+      iex> cbf |> Talan.CountingBloomFilter.put("hat")
+      iex> cbf |> Talan.CountingBloomFilter.put("hat")
+      iex> cbf |> Talan.CountingBloomFilter.put("hat")
+      iex> cbf |> Talan.CountingBloomFilter.put("car keys")
+      iex> cbf |> Talan.CountingBloomFilter.cardinality()
       2
   """
   @spec cardinality(t) :: non_neg_integer
@@ -188,7 +188,7 @@ defmodule Probabilistic.CountingBloomFilter do
   end
 
   @doc """
-  See `Probabilistic.BloomFilter.false_positive_probability/1` for
+  See `Talan.BloomFilter.false_positive_probability/1` for
   docs.
   """
   @spec false_positive_probability(t) :: float

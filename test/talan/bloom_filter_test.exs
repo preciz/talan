@@ -1,7 +1,7 @@
-defmodule Probabilistic.BloomFilterTest do
+defmodule Talan.BloomFilterTest do
   use ExUnit.Case
 
-  alias Probabilistic.BloomFilter
+  alias Talan.BloomFilter
 
   doctest BloomFilter
 
@@ -44,7 +44,7 @@ defmodule Probabilistic.BloomFilterTest do
   end
 
   test "merge" do
-    hash_functions = Probabilistic.seed_n_murmur_hash_fun(2)
+    hash_functions = Talan.seed_n_murmur_hash_fun(2)
 
     b1 = BloomFilter.new(1024, hash_functions: hash_functions)
     b2 = BloomFilter.new(1024, hash_functions: hash_functions)
@@ -61,7 +61,7 @@ defmodule Probabilistic.BloomFilterTest do
   end
 
   test "intersection" do
-    hash_functions = Probabilistic.seed_n_murmur_hash_fun(2)
+    hash_functions = Talan.seed_n_murmur_hash_fun(2)
 
     b1 = BloomFilter.new(1024, hash_functions: hash_functions)
     b2 = BloomFilter.new(1024, hash_functions: hash_functions)

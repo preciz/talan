@@ -1,5 +1,5 @@
-defmodule Probabilistic.Stream do
-  alias Probabilistic.BloomFilter
+defmodule Talan.Stream do
+  alias Talan.BloomFilter
 
   @doc """
   Returns a probabilistically uniq stream.
@@ -17,8 +17,8 @@ defmodule Probabilistic.Stream do
   ## Examples
 
       iex> list = ["a", "b", "c", "a", "b"]
-      iex> bloom_filter = Probabilistic.BloomFilter.new(100_000, false_positive_probability: 0.001)
-      iex> Probabilistic.Stream.uniq(list, bloom_filter) |> Enum.to_list
+      iex> bloom_filter = Talan.BloomFilter.new(100_000, false_positive_probability: 0.001)
+      iex> Talan.Stream.uniq(list, bloom_filter) |> Enum.to_list
       ["a", "b", "c"]
   """
   @spec uniq(Enumerable.t(), BloomFilter.t()) :: Enumerable.t()

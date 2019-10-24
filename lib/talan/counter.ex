@@ -1,4 +1,4 @@
-defmodule Probabilistic.Counter do
+defmodule Talan.Counter do
   @moduledoc """
   Linear probabilistic counter implementation with **concurrent accessibility**,
   powered by [:atomics](http://erlang.org/doc/man/atomics.html) module for cardinality estimation.
@@ -18,10 +18,10 @@ defmodule Probabilistic.Counter do
           hash_function: function
         }
 
-  alias Probabilistic.Counter
+  alias Talan.Counter
 
   @doc """
-  Returns a new `%Probabilistic.Counter{}` struct.
+  Returns a new `%Talan.Counter{}` struct.
 
   `expected_cardinality` is the max number of uniq items the counter will
   handle with approx 1% of error rate.
@@ -31,11 +31,11 @@ defmodule Probabilistic.Counter do
 
   ## Examples
 
-      iex> c = Probabilistic.Counter.new(10_000)
-      iex> c |> Probabilistic.Counter.put(["you", :can, Hash, {"any", "elixir", "term"}])
-      iex> c |> Probabilistic.Counter.put("more")
-      iex> c |> Probabilistic.Counter.put("another")
-      iex> c |> Probabilistic.Counter.cardinality()
+      iex> c = Talan.Counter.new(10_000)
+      iex> c |> Talan.Counter.put(["you", :can, Hash, {"any", "elixir", "term"}])
+      iex> c |> Talan.Counter.put("more")
+      iex> c |> Talan.Counter.put("another")
+      iex> c |> Talan.Counter.cardinality()
       3
   """
   @spec new(non_neg_integer, list) :: t
@@ -62,8 +62,8 @@ defmodule Probabilistic.Counter do
 
   ## Examples
 
-      iex> c = Probabilistic.Counter.new(10_000)
-      iex> c |> Probabilistic.Counter.put(["you", :can, Hash, {"any", "elixir", "term"}])
+      iex> c = Talan.Counter.new(10_000)
+      iex> c |> Talan.Counter.put(["you", :can, Hash, {"any", "elixir", "term"}])
       :ok
   """
   @spec put(t, any) :: :ok
@@ -77,17 +77,17 @@ defmodule Probabilistic.Counter do
 
   @doc """
   Returns the estimated cardinality for the given
-  `%Probabilistic.Counter{}` struct.
+  `%Talan.Counter{}` struct.
 
   ## Examples
 
-      iex> c = Probabilistic.Counter.new(10_000)
-      iex> c |> Probabilistic.Counter.put(["you", :can, Hash, {"any", "elixir", "term"}])
-      iex> c |> Probabilistic.Counter.put(["you", :can, Hash, {"any", "elixir", "term"}])
-      iex> c |> Probabilistic.Counter.cardinality()
+      iex> c = Talan.Counter.new(10_000)
+      iex> c |> Talan.Counter.put(["you", :can, Hash, {"any", "elixir", "term"}])
+      iex> c |> Talan.Counter.put(["you", :can, Hash, {"any", "elixir", "term"}])
+      iex> c |> Talan.Counter.cardinality()
       1
-      iex> c |> Probabilistic.Counter.put("more")
-      iex> c |> Probabilistic.Counter.cardinality()
+      iex> c |> Talan.Counter.put("more")
+      iex> c |> Talan.Counter.cardinality()
       2
   """
   @spec cardinality(t) :: non_neg_integer

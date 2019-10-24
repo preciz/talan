@@ -1,21 +1,21 @@
-# Probabilistic
+# Talan
 
-**TODO: Add description**
+Probabilistic data structures in Elixir:
+  * Bloom filter for membership estimation
+  * Counting bloom filter membership & cardinality estimation with delete support
+  * Linear probabilistic counter for cardinality estimation
+
+Documentation can be found at [https://hexdocs.pm/talan](https://hexdocs.pm/talan).
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `probabilistic` to your list of dependencies in `mix.exs`:
+Add `talan` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:probabilistic, "~> 0.1.0"}
+    {:talan, "~> 0.1.0"}
   ]
 end
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/probabilistic](https://hexdocs.pm/probabilistic).
 

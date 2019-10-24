@@ -1,4 +1,4 @@
-defmodule Probabilistic.BloomFilter do
+defmodule Talan.BloomFilter do
   @moduledoc """
   Bloom filter implementation with **concurrent accessibility**,
   powered by [:atomics](http://erlang.org/doc/man/atomics.html) module.
@@ -24,11 +24,11 @@ defmodule Probabilistic.BloomFilter do
 
   ## Examples
 
-      iex> b = Probabilistic.BloomFilter.new(1000)
-      iex> b |> Probabilistic.BloomFilter.put("Barna")
-      iex> b |> Probabilistic.BloomFilter.member?("Barna")
+      iex> b = Talan.BloomFilter.new(1000)
+      iex> b |> Talan.BloomFilter.put("Barna")
+      iex> b |> Talan.BloomFilter.member?("Barna")
       true
-      iex> b |> Probabilistic.BloomFilter.member?("Kovacs")
+      iex> b |> Talan.BloomFilter.member?("Kovacs")
       false
   """
 
@@ -44,7 +44,7 @@ defmodule Probabilistic.BloomFilter do
         }
 
   @doc """
-  Returns a new `%Probabilistic.BloomFilter{}` for the desired `cardinality`.
+  Returns a new `%Talan.BloomFilter{}` for the desired `cardinality`.
 
   `cardinality` is the expected number of unique items. Duplicated items
   can be infinite.
@@ -55,8 +55,8 @@ defmodule Probabilistic.BloomFilter do
 
   ## Examples
 
-      iex> bloom_filter = Probabilistic.BloomFilter.new(1_000_000)
-      iex> bloom_filter |> Probabilistic.BloomFilter.put("Barna Kovacs")
+      iex> bloom_filter = Talan.BloomFilter.new(1_000_000)
+      iex> bloom_filter |> Talan.BloomFilter.put("Barna Kovacs")
       :ok
   """
   @spec new(pos_integer, list) :: t
@@ -78,7 +78,7 @@ defmodule Probabilistic.BloomFilter do
         [] ->
           hash_count = required_hash_function_count(false_positive_probability)
 
-          Probabilistic.seed_n_murmur_hash_fun(hash_count)
+          Talan.seed_n_murmur_hash_fun(hash_count)
 
         list ->
           list
@@ -105,11 +105,11 @@ defmodule Probabilistic.BloomFilter do
 
   ## Examples
 
-      iex> Probabilistic.BloomFilter.required_hash_function_count(0.01)
+      iex> Talan.BloomFilter.required_hash_function_count(0.01)
       7
-      iex> Probabilistic.BloomFilter.required_hash_function_count(0.001)
+      iex> Talan.BloomFilter.required_hash_function_count(0.001)
       10
-      iex> Probabilistic.BloomFilter.required_hash_function_count(0.0001)
+      iex> Talan.BloomFilter.required_hash_function_count(0.0001)
       14
   """
   def required_hash_function_count(false_positive_probability) do
@@ -126,7 +126,7 @@ defmodule Probabilistic.BloomFilter do
 
   ## Examples
 
-      iex> Probabilistic.BloomFilter.required_filter_length(10_000, 0.01)
+      iex> Talan.BloomFilter.required_filter_length(10_000, 0.01)
       95851
   """
   def required_filter_length(cardinality, false_positive_probability)
@@ -138,7 +138,7 @@ defmodule Probabilistic.BloomFilter do
   end
 
   @doc """
-  Puts `term` into `bloom_filter` a `%Probabilistic.BloomFilter{}` struct.
+  Puts `term` into `bloom_filter` a `%Talan.BloomFilter{}` struct.
 
   After this the `member?` function will always return `true`
   for the membership of `term`.
@@ -147,10 +147,10 @@ defmodule Probabilistic.BloomFilter do
 
   ## Examples
 
-      iex> b = Probabilistic.BloomFilter.new(1000)
-      iex> b |> Probabilistic.BloomFilter.put("Chris McCord")
+      iex> b = Talan.BloomFilter.new(1000)
+      iex> b |> Talan.BloomFilter.put("Chris McCord")
       :ok
-      iex> b |> Probabilistic.BloomFilter.put("Jose Valim")
+      iex> b |> Talan.BloomFilter.put("Jose Valim")
       :ok
   """
   def put(%BF{} = bloom_filter, term) do
@@ -177,11 +177,11 @@ defmodule Probabilistic.BloomFilter do
 
   ## Examples
 
-      iex> b = Probabilistic.BloomFilter.new(1000)
-      iex> b |> Probabilistic.BloomFilter.member?("Barna Kovacs")
+      iex> b = Talan.BloomFilter.new(1000)
+      iex> b |> Talan.BloomFilter.member?("Barna Kovacs")
       false
-      iex> b |> Probabilistic.BloomFilter.put("Barna Kovacs")
-      iex> b |> Probabilistic.BloomFilter.member?("Barna Kovacs")
+      iex> b |> Talan.BloomFilter.put("Barna Kovacs")
+      iex> b |> Talan.BloomFilter.member?("Barna Kovacs")
       true
   """
   def member?(%BF{atomics_ref: atomics_ref} = bloom_filter, term) do
@@ -201,7 +201,7 @@ defmodule Probabilistic.BloomFilter do
   defp do_member?(_, []), do: true
 
   @doc """
-  Hashes `term` with all `hash_functions` of `%Probabilistic.BloomFilter{}`.
+  Hashes `term` with all `hash_functions` of `%Talan.BloomFilter{}`.
 
   Returns a list of hashed values.
   """
@@ -220,11 +220,11 @@ defmodule Probabilistic.BloomFilter do
   defp do_hash_term(_, [], _, acc), do: acc
 
   @doc """
-  Merge multiple `%Probabilistic.BloomFilter{}` structs's atomics into one new struct.
+  Merge multiple `%Talan.BloomFilter{}` structs's atomics into one new struct.
 
   Note: To work correctly filters with identical size & hash functions must be used.
 
-  Returns a new `%Probabilistic.BloomFilter{}` struct which set bits are the merged set bits of
+  Returns a new `%Talan.BloomFilter{}` struct which set bits are the merged set bits of
   the bloom filters in the `list`.
   """
   def merge([]), do: []
@@ -246,7 +246,7 @@ defmodule Probabilistic.BloomFilter do
   end
 
   @doc """
-  Intersection of `%Probabilistic.BloomFilter{}` structs's atomics into one new struct.
+  Intersection of `%Talan.BloomFilter{}` structs's atomics into one new struct.
 
   Note: To work correctly filters with identical size & hash functions must be used.
 
@@ -278,17 +278,17 @@ defmodule Probabilistic.BloomFilter do
 
   ## Examples
 
-      iex> b = Probabilistic.BloomFilter.new(1000)
-      iex> b |> Probabilistic.BloomFilter.cardinality()
+      iex> b = Talan.BloomFilter.new(1000)
+      iex> b |> Talan.BloomFilter.cardinality()
       0
-      iex> b |> Probabilistic.BloomFilter.put("Barna")
-      iex> b |> Probabilistic.BloomFilter.cardinality()
+      iex> b |> Talan.BloomFilter.put("Barna")
+      iex> b |> Talan.BloomFilter.cardinality()
       1
-      iex> b |> Probabilistic.BloomFilter.put("Barna")
-      iex> b |> Probabilistic.BloomFilter.cardinality()
+      iex> b |> Talan.BloomFilter.put("Barna")
+      iex> b |> Talan.BloomFilter.cardinality()
       1
-      iex> b |> Probabilistic.BloomFilter.put("Kovacs")
-      iex> b |> Probabilistic.BloomFilter.cardinality()
+      iex> b |> Talan.BloomFilter.put("Kovacs")
+      iex> b |> Talan.BloomFilter.cardinality()
       2
   """
   @spec cardinality(t) :: non_neg_integer
@@ -324,12 +324,12 @@ defmodule Probabilistic.BloomFilter do
 
   ## Examples
 
-      iex> b = Probabilistic.BloomFilter.new(1000)
-      iex> b |> Probabilistic.BloomFilter.false_positive_probability()
+      iex> b = Talan.BloomFilter.new(1000)
+      iex> b |> Talan.BloomFilter.false_positive_probability()
       0.0 # fpp zero when bloom filter is empty
-      iex> b |> Probabilistic.BloomFilter.put("Barna") # fpp increase
-      iex> b |> Probabilistic.BloomFilter.put("Kovacs")
-      iex> fpp = b |> Probabilistic.BloomFilter.false_positive_probability()
+      iex> b |> Talan.BloomFilter.put("Barna") # fpp increase
+      iex> b |> Talan.BloomFilter.put("Kovacs")
+      iex> fpp = b |> Talan.BloomFilter.false_positive_probability()
       iex> fpp > 0 && fpp < 1
       true
   """
@@ -353,8 +353,8 @@ defmodule Probabilistic.BloomFilter do
 
   ## Examples
 
-      iex> b = Probabilistic.BloomFilter.new(1000)
-      iex> b |> Probabilistic.BloomFilter.bits_info()
+      iex> b = Talan.BloomFilter.new(1000)
+      iex> b |> Talan.BloomFilter.bits_info()
       %{total_bits: 9536, set_bits_count: 0, set_ratio: 0.0}
   """
   @spec bits_info(t()) :: map()
