@@ -115,7 +115,9 @@ defmodule Talan.BloomFilter do
   """
   @spec required_hash_function_count(float) :: non_neg_integer
   def required_hash_function_count(false_positive_probability) do
-    -:math.log2(false_positive_probability) |> ceil()
+    -:math.log2(false_positive_probability)
+    |> Float.ceil()
+    |> round()
   end
 
   @doc """
@@ -137,7 +139,8 @@ defmodule Talan.BloomFilter do
              false_positive_probability < 1 do
     import :math, only: [log: 1, pow: 2]
 
-    ceil(-cardinality * log(false_positive_probability) / pow(log(2), 2))
+    Float.ceil(-cardinality * log(false_positive_probability) / pow(log(2), 2))
+    |> round()
   end
 
   @doc """
