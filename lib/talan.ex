@@ -26,7 +26,7 @@ defmodule Talan do
     []
   end
 
-  def to_bitstring(<<bit::1, rest::bitstring>>)do
+  def to_bitstring(<<bit::1, rest::bitstring>>) do
     [bit | to_bitstring(rest)]
   end
 end

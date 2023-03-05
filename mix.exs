@@ -31,7 +31,7 @@ defmodule Talan.MixProject do
     [
       {:murmur, "~> 1.0"},
       {:abit, "~> 0.3"},
-      {:ex_doc, "~> 0.23", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.23", only: :dev, runtime: false}
     ]
   end
 
@@ -39,7 +39,7 @@ defmodule Talan.MixProject do
     [
       main: "Talan",
       source_ref: "v#{@version}",
-      source_url: @github,
+      source_url: @github
     ]
   end
 
