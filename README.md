@@ -28,11 +28,13 @@ end
 ## Usage
 
 ```elixir
-bloom_filter = Talan.BloomFilter.new(1000)
-bloom_filter |> Talan.BloomFilter.put("Barna")
-bloom_filter |> Talan.BloomFilter.member?("Barna")
+alias Talan.BloomFilter
+
+bloom_filter = BloomFilter.new(1000)
+bloom_filter |> BloomFilter.put("Barna")
+bloom_filter |> BloomFilter.member?("Barna")
 true
-bloom_filter |> Talan.BloomFilter.member?("Kovacs")
+bloom_filter |> BloomFilter.member?("Kovacs")
 false
 ```
 
