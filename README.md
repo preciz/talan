@@ -25,6 +25,17 @@ def deps do
 end
 ```
 
+## Usage
+
+```elixir
+bloom_filter = Talan.BloomFilter.new(1000)
+bloom_filter |> Talan.BloomFilter.put("Barna")
+bloom_filter |> Talan.BloomFilter.member?("Barna")
+true
+bloom_filter |> Talan.BloomFilter.member?("Kovacs")
+false
+```
+
 ## License
 
 Talán is [MIT licensed](LICENSE).
