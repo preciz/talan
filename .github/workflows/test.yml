@@ -1,43 +1,20 @@
 name: test
 
-on:
-  pull_request:
-  push:
-      branches:
-      - master
+on: push
 
 jobs:
   mix_test:
+    runs-on: ubuntu-latest
     name: mix test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
-
     strategy:
       matrix:
-        include:
-          - elixir: 1.7.4
-            otp: 21.3
-
-          - elixir: 1.8.2
-            otp: 21.3
-
-          - elixir: 1.11.4
-            otp: 23.3
-
-          - elixir: 1.12.3
-            otp: 24.3
-
-    runs-on: ubuntu-latest
-
+        otp: [20.3, 21.3, 22.3, 23.3]
+        elixir: [1.7, 1.10, 1.11, 1.14]
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Set up Elixir
-      uses: erlef/setup-elixir@v1
-      with:
-        elixir-version: ${{matrix.elixir}}
-        otp-version: ${{matrix.otp}}
-
-    - name: Install Dependencies
-      run: mix deps.get --only test
-
-    - name: Run Tests
-      run: mix test
+      - uses: actions/checkout@v3
+      - uses: erlef/setup-elixir@v1
+        with:
+          otp-version: ${{matrix.otp}}
+          elixir-version: ${{matrix.elixir}}
+      - run: mix deps.get --only test
+      - run: mix test
