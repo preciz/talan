@@ -1,7 +1,5 @@
 # Talán
 
-[![Build Status](https://travis-ci.org/preciz/talan.svg?branch=master)](https://travis-ci.org/preciz/talan)
-
 Probabilistic data structures in Elixir:
   * Bloom filter for membership estimation
   * Counting bloom filter for membership & cardinality estimation with delete support
