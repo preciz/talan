@@ -1,5 +1,7 @@
 # Talán
 
+![Actions Status](https://github.com/preciz/talan/workflows/test/badge.svg)
+
 Probabilistic data structures in Elixir:
   * Bloom filter for membership estimation
   * Counting bloom filter for membership & cardinality estimation with delete support
