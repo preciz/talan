@@ -1,5 +1,5 @@
 %{
-  "abit": {:hex, :abit, "0.3.1", "d51ea782e6e977e23e9f4765848257ce257f17cbe0fc58249f533916fc923606", [:mix], [], "hexpm", "27e702e2426e8dee3ebe452224ddd3cd323f11f869ecf40192b76cf0fb695566"},
+  "abit": {:hex, :abit, "0.3.2", "3c00960f6841a5871fcf33a6ba4fcca5fa7e231e2111e1355ef20e55535e056a", [:mix], [], "hexpm", "c97527cc32f2a3cfd9d1ad918554c9f529a015c96895675bac03f635a90eaade"},
   "earmark": {:hex, :earmark, "1.4.2", "3aa0bd23bc4c61cf2f1e5d752d1bb470560a6f8539974f767a38923bb20e1d7f", [:mix], [], "hexpm", "5e8806285d8a3a8999bd38e4a73c58d28534c856bc38c44818e5ba85bbda16fb"},
   "earmark_parser": {:hex, :earmark_parser, "1.4.31", "a93921cdc6b9b869f519213d5bc79d9e218ba768d7270d46fdcf1c01bacff9e2", [:mix], [], "hexpm", "317d367ee0335ef037a87e46c91a2269fef6306413f731e8ec11fc45a7efd059"},
   "ex_doc": {:hex, :ex_doc, "0.29.2", "dfa97532ba66910b2a3016a4bbd796f41a86fc71dd5227e96f4c8581fdf0fdf0", [:mix], [{:earmark_parser, "~> 1.4.19", [hex: :earmark_parser, repo: "hexpm", optional: false]}, {:makeup_elixir, "~> 0.14", [hex: :makeup_elixir, repo: "hexpm", optional: false]}, {:makeup_erlang, "~> 0.1", [hex: :makeup_erlang, repo: "hexpm", optional: false]}], "hexpm", "6b5d7139eda18a753e3250e27e4a929f8d2c880dd0d460cb9986305dea3e03af"},
