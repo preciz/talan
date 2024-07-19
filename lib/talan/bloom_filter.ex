@@ -363,14 +363,14 @@ defmodule Talan.BloomFilter do
 
   @doc """
   Returns a float representing current estimated
-  false positivity probability.
+  false positive probability.
 
   ## Examples
 
       iex> b = Talan.BloomFilter.new(1000)
       iex> b |> Talan.BloomFilter.false_positive_probability()
       0.0 # fpp zero when bloom filter is empty
-      iex> b |> Talan.BloomFilter.put("Barna") # fpp increase
+      iex> b |> Talan.BloomFilter.put("Barna") # fpp increases
       iex> b |> Talan.BloomFilter.put("Kovacs")
       iex> fpp = b |> Talan.BloomFilter.false_positive_probability()
       iex> fpp > 0 && fpp < 1

@@ -21,26 +21,26 @@ defmodule Talan.BloomFilterTest do
     assert BloomFilter.member?(b, "ok") == false
   end
 
-  test "test member? 2" do
+  test "member? with multiple elements" do
     b = BloomFilter.new(1024)
 
     before_result =
       for i <- 1..100 do
-        b |> BloomFilter.member?(i)
+        BloomFilter.member?(b, i)
       end
 
-    assert before_result |> Enum.all?(&(&1 == false))
+    assert Enum.all?(before_result, &(&1 == false))
 
     for i <- 1..100 do
-      b |> BloomFilter.put(i)
+      BloomFilter.put(b, i)
     end
 
     after_result =
       for i <- 1..100 do
-        b |> BloomFilter.member?(i)
+        BloomFilter.member?(b, i)
       end
 
-    assert after_result |> Enum.all?()
+    assert Enum.all?(after_result)
   end
 
   test "merge" do
