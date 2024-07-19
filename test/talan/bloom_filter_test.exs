@@ -5,6 +5,25 @@ defmodule Talan.BloomFilterTest do
 
   doctest BloomFilter
 
+  test "new/2 creates a BloomFilter with default options" do
+    b = BloomFilter.new(1000)
+    assert %BloomFilter{} = b
+    assert length(b.hash_functions) == 7
+  end
+
+  test "new/2 creates a BloomFilter with custom options" do
+    custom_hash_functions = [&:erlang.phash2/1]
+    b = BloomFilter.new(1000, false_positive_probability: 0.001, hash_functions: custom_hash_functions)
+    assert %BloomFilter{} = b
+    assert b.hash_functions == custom_hash_functions
+  end
+
+  test "new/2 raises error for invalid false_positive_probability" do
+    assert_raise ArgumentError, fn ->
+      BloomFilter.new(1000, false_positive_probability: 2.0)
+    end
+  end
+
   test "empty has no member" do
     b = BloomFilter.new(1024)
 
@@ -17,7 +36,6 @@ defmodule Talan.BloomFilterTest do
     BloomFilter.put(b, "hello")
 
     assert BloomFilter.member?(b, "hello") == true
-
     assert BloomFilter.member?(b, "ok") == false
   end
 
@@ -74,5 +92,45 @@ defmodule Talan.BloomFilterTest do
 
     assert BloomFilter.member?(b3, "hello") == true
     assert BloomFilter.member?(b3, "world") == false
+  end
+
+  test "required_hash_function_count/1" do
+    assert BloomFilter.required_hash_function_count(0.01) == 7
+    assert BloomFilter.required_hash_function_count(0.001) == 10
+    assert BloomFilter.required_hash_function_count(0.0001) == 14
+  end
+
+  test "required_filter_length/2" do
+    assert BloomFilter.required_filter_length(10_000, 0.01) == 95851
+  end
+
+  test "hash_term/2" do
+    b = BloomFilter.new(1000)
+    hashes = BloomFilter.hash_term(b, :test_term)
+    assert is_list(hashes)
+    assert length(hashes) == 7
+    assert Enum.all?(hashes, &is_integer/1)
+  end
+
+  test "false_positive_probability/1" do
+    b = BloomFilter.new(1000)
+    assert BloomFilter.false_positive_probability(b) == 0.0
+
+    BloomFilter.put(b, "item1")
+    fpp = BloomFilter.false_positive_probability(b)
+    assert fpp > 0.0 and fpp < 1.0
+  end
+
+  test "bits_info/1" do
+    b = BloomFilter.new(1000)
+    info = BloomFilter.bits_info(b)
+    assert %{total_bits: _, set_bits_count: _, set_ratio: _} = info
+    assert info.set_bits_count == 0
+    assert info.set_ratio == 0.0
+
+    BloomFilter.put(b, "item1")
+    updated_info = BloomFilter.bits_info(b)
+    assert updated_info.set_bits_count > 0
+    assert updated_info.set_ratio > 0.0
   end
 end

@@ -341,7 +341,6 @@ defmodule Talan.BloomFilter do
         hash_functions: hash_functions
       }) do
     set_bits_count = Abit.set_bits_count(atomics_ref)
-
     hash_function_count = length(hash_functions)
 
     cond do
