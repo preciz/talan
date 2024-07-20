@@ -30,7 +30,7 @@ defmodule Talan.MixProject do
   defp deps do
     [
       {:murmur, "~> 1.0"},
-      {:abit, "~> 0.3"},
+      {:abit, "~> 0.3.3"},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false}
     ]
   end
