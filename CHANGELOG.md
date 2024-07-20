@@ -1,5 +1,8 @@
 # Changelog for Talan
 
+## v0.1.4
+  * Fix cardinality estimation when `set_bits_count` <= `hash_function_count` due to overlap
+
 ## v0.1.3
   * Implement BloomFilter.serialize/1 and BloomFilter.deserialize/1
 
