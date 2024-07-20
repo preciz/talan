@@ -1,6 +1,6 @@
 # Talán
 
-![Actions Status](https://github.com/preciz/talan/workflows/test/badge.svg)
+[![test](https://github.com/preciz/talan/actions/workflows/test.yml/badge.svg)](https://github.com/preciz/talan/actions/workflows/test.yml)
 
 Probabilistic data structures in Elixir:
   * Bloom filter for membership estimation
