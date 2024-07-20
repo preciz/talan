@@ -344,10 +344,10 @@ defmodule Talan.BloomFilter do
     hash_function_count = length(hash_functions)
 
     cond do
-      set_bits_count < hash_function_count ->
+      set_bits_count == 0 ->
         0
 
-      set_bits_count == hash_function_count ->
+      set_bits_count <= hash_function_count ->
         1
 
       filter_length == set_bits_count ->
