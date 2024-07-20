@@ -31,7 +31,7 @@ defmodule Talan.MixProject do
     [
       {:murmur, "~> 1.0"},
       {:abit, "~> 0.3"},
-      {:ex_doc, "~> 0.29", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false}
     ]
   end
 
