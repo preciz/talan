@@ -13,7 +13,13 @@ defmodule Talan.BloomFilterTest do
 
   test "new/2 creates a BloomFilter with custom options" do
     custom_hash_functions = [&:erlang.phash2/1]
-    b = BloomFilter.new(1000, false_positive_probability: 0.001, hash_functions: custom_hash_functions)
+
+    b =
+      BloomFilter.new(1000,
+        false_positive_probability: 0.001,
+        hash_functions: custom_hash_functions
+      )
+
     assert %BloomFilter{} = b
     assert b.hash_functions == custom_hash_functions
   end
@@ -132,5 +138,29 @@ defmodule Talan.BloomFilterTest do
     updated_info = BloomFilter.bits_info(b)
     assert updated_info.set_bits_count > 0
     assert updated_info.set_ratio > 0.0
+  end
+
+  test "serialize and deserialize" do
+    original = BloomFilter.new(1000)
+    BloomFilter.put(original, "item1")
+    BloomFilter.put(original, "item2")
+
+    serialized = BloomFilter.serialize(original)
+    assert is_binary(serialized)
+
+    deserialized = BloomFilter.deserialize(serialized)
+    assert %BloomFilter{} = deserialized
+    assert deserialized.filter_length == original.filter_length
+    assert length(deserialized.hash_functions) == length(original.hash_functions)
+
+    # Check that the deserialized filter has the same members
+    assert BloomFilter.member?(deserialized, "item1")
+    assert BloomFilter.member?(deserialized, "item2")
+    refute BloomFilter.member?(deserialized, "item3")
+
+    # Check that the serialized and deserialized filters have the same bits set
+    original_info = BloomFilter.bits_info(original)
+    deserialized_info = BloomFilter.bits_info(deserialized)
+    assert original_info == deserialized_info
   end
 end

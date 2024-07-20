@@ -409,4 +409,59 @@ defmodule Talan.BloomFilter do
       set_ratio: set_bits_count / filter_length
     }
   end
+
+  @doc """
+  Serializes the Bloom filter into a binary.
+
+  This function converts the Bloom filter structure into a binary format,
+  which can be used for storage or transmission.
+
+  ## Examples
+
+      iex> bloom_filter = Talan.BloomFilter.new(1000)
+      iex> serialized = Talan.BloomFilter.serialize(bloom_filter)
+      iex> is_binary(serialized)
+      true
+
+  """
+  @doc since: "0.1.3"
+  @spec serialize(t()) :: binary
+  def serialize(%BF{
+        atomics_ref: atomics_ref,
+        filter_length: filter_length,
+        hash_functions: hash_functions
+      }) do
+    %{
+      atomics_ref: Abit.Atomics.serialize(atomics_ref),
+      filter_length: filter_length,
+      hash_functions: hash_functions
+    }
+    |> :erlang.term_to_binary()
+  end
+
+  @doc """
+  Deserializes a binary into a Bloom filter.
+
+  This function takes a binary that was previously created by `serialize/1`
+  and reconstructs the Bloom filter structure.
+
+  ## Examples
+
+      iex> bloom_filter = Talan.BloomFilter.new(1000)
+      iex> serialized = Talan.BloomFilter.serialize(bloom_filter)
+      iex> deserialized = Talan.BloomFilter.deserialize(serialized)
+      iex> is_struct(deserialized, Talan.BloomFilter)
+      true
+
+  """
+  @doc since: "0.1.3"
+  @spec deserialize(binary) :: t()
+  def deserialize(binary) when is_binary(binary) do
+    map =
+      binary
+      |> :erlang.binary_to_term()
+      |> Map.update!(:atomics_ref, &Abit.Atomics.deserialize(&1))
+
+    struct!(__MODULE__, map)
+  end
 end
