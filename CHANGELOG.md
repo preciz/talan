@@ -1,5 +1,8 @@
 # Changelog for Talan
 
+## v0.1.3
+  * Implement BloomFilter.serialize/1 and BloomFilter.deserialize/1
+
 ## v0.1.2
   * Update murmur dependency to 1.0.3 to fix compilation warnings
 
