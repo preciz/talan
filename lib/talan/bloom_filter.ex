@@ -99,7 +99,7 @@ defmodule Talan.BloomFilter do
   end
 
   @doc """
-  Returns count of required hash functions for the
+  Returns the count of required hash functions for the
   given `false_positive_probability`.
 
   [Wikipedia - Bloom filter - Optimal number of hash functions](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions)
@@ -316,7 +316,7 @@ defmodule Talan.BloomFilter do
   end
 
   @doc """
-  Returns an non negative integer representing the
+  Returns a non negative integer representing the
   estimated cardinality count of unique elements in the filter.
 
   ## Examples

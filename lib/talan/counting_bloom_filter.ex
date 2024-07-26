@@ -101,8 +101,8 @@ defmodule Talan.CountingBloomFilter do
   end
 
   @doc """
-  Probabilistically delete `term` from `bloom_filter` and
-  decrement counters in `counter`.
+  Probabilistically deletes `term` from `bloom_filter` and
+  decrements counters in `counter`.
 
   ## Examples
 
@@ -150,12 +150,12 @@ defmodule Talan.CountingBloomFilter do
   end
 
   @doc """
-  Returns probabilistic count of term in `counter`.
+  Returns the probabilistic count of term in `counter`.
 
   This means that (given no hash collisions) it returns how many times
   the item was put into the CountingBloomFilter. A few hash collisions
   should be also fine since it returns the average count of the counters.
-  An single item is hashed with multiple counters.
+  A single item is hashed with multiple counters.
 
   ## Examples
 

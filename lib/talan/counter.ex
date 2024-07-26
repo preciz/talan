@@ -5,7 +5,7 @@ defmodule Talan.Counter do
 
   Cardinality is the count of unique elements.
 
-  For more info about linear probabilistic counting:
+  For more information about linear probabilistic counting:
   [linear probabilistic counting](https://www.waitingforcode.com/big-data-algorithms/cardinality-estimation-linear-probabilistic-counting/read)
   """
 
