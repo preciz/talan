@@ -1,5 +1,8 @@
 # Changelog for Talan
 
+## v0.2.0
+  * BREAKING: Use Murmur v2.0 that fixes 128bit hash generation to be consistent with the original implementation
+
 ## v0.1.4
   * Fix cardinality estimation when `set_bits_count` <= `hash_function_count` due to overlap
 
