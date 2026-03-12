@@ -1,7 +1,7 @@
 defmodule Talan.MixProject do
   use Mix.Project
 
-  @version "0.2.0"
+  @version "0.2.1"
   @github "https://github.com/preciz/talan"
 
   def project do
@@ -30,8 +30,8 @@ defmodule Talan.MixProject do
   defp deps do
     [
       {:murmur, "~> 2.0"},
-      {:abit, "~> 0.3.3"},
-      {:ex_doc, "~> 0.34", only: :dev, runtime: false}
+      {:abit, "~> 0.4.0"},
+      {:ex_doc, "~> 0.40", only: :dev, runtime: false}
     ]
   end
 

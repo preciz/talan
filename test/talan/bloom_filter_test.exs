@@ -163,4 +163,15 @@ defmodule Talan.BloomFilterTest do
     deserialized_info = BloomFilter.bits_info(deserialized)
     assert original_info == deserialized_info
   end
+
+  test "cardinality when all bits are set" do
+    b = BloomFilter.new(10, false_positive_probability: 0.1)
+
+    for i <- 0..(b.filter_length - 1) do
+      Abit.set_bit_at(b.atomics_ref, i, 1)
+    end
+
+    hash_count = length(b.hash_functions)
+    assert BloomFilter.cardinality(b) == round(b.filter_length / hash_count)
+  end
 end

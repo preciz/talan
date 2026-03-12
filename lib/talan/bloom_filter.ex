@@ -266,7 +266,7 @@ defmodule Talan.BloomFilter do
     |> Enum.reduce(
       new_atomics_ref,
       fn %BF{atomics_ref: atomics_ref}, acc ->
-        Abit.merge(acc, atomics_ref)
+        Abit.union(acc, atomics_ref)
       end
     )
 
@@ -302,7 +302,7 @@ defmodule Talan.BloomFilter do
 
     new_atomics_ref = :atomics.new(size, signed: false)
 
-    Abit.merge(new_atomics_ref, first_atomics_ref)
+    Abit.union(new_atomics_ref, first_atomics_ref)
 
     list
     |> Enum.reduce(

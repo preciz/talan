@@ -14,7 +14,33 @@ defmodule TalanTest do
   end
 
   test "to_bitstring/1 converts binary to list of bits" do
-    assert Talan.to_bitstring(<<1, 2, 3>>) == [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1]
+    assert Talan.to_bitstring(<<1, 2, 3>>) == [
+             0,
+             0,
+             0,
+             0,
+             0,
+             0,
+             0,
+             1,
+             0,
+             0,
+             0,
+             0,
+             0,
+             0,
+             1,
+             0,
+             0,
+             0,
+             0,
+             0,
+             0,
+             0,
+             1,
+             1
+           ]
+
     assert Talan.to_bitstring(<<>>) == []
   end
 end
