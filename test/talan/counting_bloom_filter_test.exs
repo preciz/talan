@@ -94,6 +94,19 @@ defmodule Talan.CountingBloomFilterTest do
     assert CountingBloomFilter.count(cbf, "test") == 1
   end
 
+  test "clear/1 resets positive and negative counters in place" do
+    cbf = CountingBloomFilter.new(1000)
+    CountingBloomFilter.put(cbf, "present")
+    CountingBloomFilter.delete(cbf, "absent")
+
+    assert CountingBloomFilter.clear(cbf) == cbf
+    refute CountingBloomFilter.member?(cbf, "present")
+    assert CountingBloomFilter.count(cbf, "present") == 0
+    assert CountingBloomFilter.count(cbf, "absent") == 0
+    assert CountingBloomFilter.cardinality(cbf) == 0
+    assert CountingBloomFilter.false_positive_probability(cbf) == 0.0
+  end
+
   test "count/2 can return a negative count after deleting an absent term" do
     cbf = CountingBloomFilter.new(1000)
 

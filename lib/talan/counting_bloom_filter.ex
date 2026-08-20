@@ -157,6 +157,30 @@ defmodule Talan.CountingBloomFilter do
   end
 
   @doc """
+  Clears every counter in `counting_bloom_filter` and returns the same filter.
+
+  The filter is reset in place without reallocating its packed counter storage.
+  Clearing individual atomic words is safe during concurrent access, but the
+  filter is not cleared as one atomic operation. Concurrent reads may observe a
+  partially cleared filter, and concurrent updates may be cleared or remain
+  visible depending on their timing.
+
+  ## Examples
+
+      iex> cbf = Talan.CountingBloomFilter.new(1000)
+      iex> Talan.CountingBloomFilter.put(cbf, "hat")
+      iex> Talan.CountingBloomFilter.clear(cbf) == cbf
+      true
+      iex> Talan.CountingBloomFilter.count(cbf, "hat")
+      0
+  """
+  @spec clear(t()) :: t()
+  def clear(%CBF{counter: counter} = counting_bloom_filter) do
+    Abit.Counter.clear(counter)
+    counting_bloom_filter
+  end
+
+  @doc """
   See `Talan.BloomFilter.member?/2` for docs.
 
   ## Examples

@@ -96,6 +96,30 @@ defmodule Talan.Counter do
   end
 
   @doc """
+  Clears every bit in `counter` and returns the same counter.
+
+  The counter is reset in place without reallocating its atomics reference.
+  Clearing individual atomic words is safe during concurrent access, but the
+  counter is not cleared as one atomic operation. Concurrent cardinality reads
+  may observe a partially cleared counter, and concurrent writes may be cleared
+  or remain set depending on their timing.
+
+  ## Examples
+
+      iex> counter = Talan.Counter.new(1000)
+      iex> Talan.Counter.put(counter, "Barna")
+      iex> Talan.Counter.clear(counter) == counter
+      true
+      iex> Talan.Counter.cardinality(counter)
+      0
+  """
+  @spec clear(t()) :: t()
+  def clear(%Counter{atomics_ref: atomics_ref} = counter) do
+    Abit.clear(atomics_ref)
+    counter
+  end
+
+  @doc """
   Returns the estimated cardinality for the given
   `%Talan.Counter{}` struct.
 

@@ -60,6 +60,15 @@ defmodule Talan.CounterTest do
     assert Counter.cardinality(c) == 1
   end
 
+  test "clear/1 resets the Counter in place" do
+    counter = Counter.new(1000)
+    Counter.put(counter, "present")
+
+    assert Counter.cardinality(counter) == 1
+    assert Counter.clear(counter) == counter
+    assert Counter.cardinality(counter) == 0
+  end
+
   test "cardinality/1 returns 0 for empty Counter" do
     c = Counter.new(1000)
     assert Counter.cardinality(c) == 0

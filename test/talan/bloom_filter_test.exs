@@ -119,6 +119,17 @@ defmodule Talan.BloomFilterTest do
     assert Abit.bit_at(b.atomics_ref, 0) == 0
   end
 
+  test "clear/1 resets the filter in place" do
+    b = BloomFilter.new(1000)
+    BloomFilter.put(b, "present")
+
+    assert BloomFilter.member?(b, "present")
+    assert BloomFilter.clear(b) == b
+    refute BloomFilter.member?(b, "present")
+    assert BloomFilter.cardinality(b) == 0
+    assert BloomFilter.bits_info(b).set_bits_count == 0
+  end
+
   test "merge" do
     hash_functions = Talan.seed_n_murmur_hash_fun(2)
 

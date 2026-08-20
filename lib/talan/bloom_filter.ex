@@ -222,6 +222,30 @@ defmodule Talan.BloomFilter do
   defp do_put_hashes(_atomics_ref, []), do: :ok
 
   @doc """
+  Clears every bit in `bloom_filter` and returns the same filter.
+
+  The filter is reset in place without reallocating its atomics reference.
+  Clearing individual atomic words is safe during concurrent access, but the
+  filter is not cleared as one atomic operation. Concurrent reads may observe a
+  partially cleared filter, and concurrent writes may be cleared or remain set
+  depending on their timing.
+
+  ## Examples
+
+      iex> b = Talan.BloomFilter.new(1000)
+      iex> Talan.BloomFilter.put(b, "Barna")
+      iex> Talan.BloomFilter.clear(b) == b
+      true
+      iex> Talan.BloomFilter.member?(b, "Barna")
+      false
+  """
+  @spec clear(t()) :: t()
+  def clear(%BF{atomics_ref: atomics_ref} = bloom_filter) do
+    Abit.clear(atomics_ref)
+    bloom_filter
+  end
+
+  @doc """
   Checks for membership of `term` in `bloom_filter`.
 
   Returns `false` if the term is definitely absent.
