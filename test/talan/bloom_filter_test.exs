@@ -100,6 +100,24 @@ defmodule Talan.BloomFilterTest do
     assert BloomFilter.member?(b3, "okkkk") == false
   end
 
+  test "merge rejects filters with different sizes or hash functions" do
+    hash_functions = [fn term -> :erlang.phash2(term) end]
+
+    assert_raise ArgumentError, ~r/same size and use the same hash functions/, fn ->
+      BloomFilter.merge([
+        BloomFilter.new(100, hash_functions: hash_functions),
+        BloomFilter.new(1000, hash_functions: hash_functions)
+      ])
+    end
+
+    assert_raise ArgumentError, ~r/same size and use the same hash functions/, fn ->
+      BloomFilter.merge([
+        BloomFilter.new(100, hash_functions: [fn _term -> 1 end]),
+        BloomFilter.new(100, hash_functions: [fn _term -> 2 end])
+      ])
+    end
+  end
+
   test "intersection" do
     hash_functions = Talan.seed_n_murmur_hash_fun(2)
 
@@ -114,6 +132,24 @@ defmodule Talan.BloomFilterTest do
 
     assert BloomFilter.member?(b3, "hello") == true
     assert BloomFilter.member?(b3, "world") == false
+  end
+
+  test "intersection rejects filters with different sizes or hash functions" do
+    hash_functions = [fn term -> :erlang.phash2(term) end]
+
+    assert_raise ArgumentError, ~r/same size and use the same hash functions/, fn ->
+      BloomFilter.intersection([
+        BloomFilter.new(100, hash_functions: hash_functions),
+        BloomFilter.new(1000, hash_functions: hash_functions)
+      ])
+    end
+
+    assert_raise ArgumentError, ~r/same size and use the same hash functions/, fn ->
+      BloomFilter.intersection([
+        BloomFilter.new(100, hash_functions: [fn _term -> 1 end]),
+        BloomFilter.new(100, hash_functions: [fn _term -> 2 end])
+      ])
+    end
   end
 
   test "required_hash_function_count/1" do

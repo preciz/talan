@@ -38,6 +38,14 @@ defmodule Talan.CountingBloomFilterTest do
     assert CountingBloomFilter.count(cbf, "test") == 1
   end
 
+  test "count/2 can return a negative count after deleting an absent term" do
+    cbf = CountingBloomFilter.new(1000)
+
+    CountingBloomFilter.delete(cbf, "absent")
+
+    assert CountingBloomFilter.count(cbf, "absent") == -1
+  end
+
   test "member?/2 returns correct membership" do
     cbf = CountingBloomFilter.new(1000)
     CountingBloomFilter.put(cbf, "test")

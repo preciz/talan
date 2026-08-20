@@ -1,5 +1,13 @@
 # Changelog for Talan
 
+## Unreleased
+  * Improve documentation wording and fix typos
+  * Update locked dependencies, including Murmur to 2.0.1 and ExDoc to 0.40.3
+  * Return a finite cardinality estimate when a linear counter is saturated
+  * Round Bloom filter storage up so it always meets the required bit count
+  * Allocate exactly one Counting Bloom filter counter per Bloom filter bit
+  * Validate Bloom filter compatibility before merge and intersection operations
+
 ## v0.2.1
   * Improve syntax and language
   * Update `abit` to `~> 0.4.0` and `ex_doc` to `~> 0.40`

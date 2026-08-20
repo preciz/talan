@@ -257,6 +257,8 @@ defmodule Talan.BloomFilter do
   """
   @spec merge(nonempty_list(t)) :: t
   def merge(list = [first = %BF{atomics_ref: first_atomics_ref} | _tl]) do
+    validate_compatible_filters!(list)
+
     %{size: size} = :atomics.info(first_atomics_ref)
 
     new_atomics_ref = :atomics.new(size, signed: false)
@@ -297,6 +299,8 @@ defmodule Talan.BloomFilter do
   """
   @spec intersection(nonempty_list(t)) :: t
   def intersection(list = [first = %BF{atomics_ref: first_atomics_ref} | _tl]) do
+    validate_compatible_filters!(list)
+
     %{size: size} = :atomics.info(first_atomics_ref)
 
     new_atomics_ref = :atomics.new(size, signed: false)
@@ -462,5 +466,30 @@ defmodule Talan.BloomFilter do
       |> Map.update!(:atomics_ref, &Abit.Atomics.deserialize(&1))
 
     struct!(__MODULE__, map)
+  end
+
+  defp validate_compatible_filters!([
+         %BF{
+           atomics_ref: first_atomics_ref,
+           filter_length: first_filter_length,
+           hash_functions: first_hash_functions
+         }
+         | filters
+       ]) do
+    %{size: first_atomics_size} = :atomics.info(first_atomics_ref)
+
+    Enum.each(filters, fn %BF{
+                            atomics_ref: atomics_ref,
+                            filter_length: filter_length,
+                            hash_functions: hash_functions
+                          } ->
+      %{size: atomics_size} = :atomics.info(atomics_ref)
+
+      if atomics_size != first_atomics_size or filter_length != first_filter_length or
+           hash_functions != first_hash_functions do
+        raise ArgumentError,
+              "all Bloom filters must have the same size and use the same hash functions"
+      end
+    end)
   end
 end

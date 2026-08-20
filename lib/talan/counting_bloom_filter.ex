@@ -23,7 +23,7 @@ defmodule Talan.CountingBloomFilter do
   defstruct [:bloom_filter, :counter]
 
   @type t :: %__MODULE__{
-          bloom_filter: reference,
+          bloom_filter: BF.t(),
           counter: Abit.Counter.t()
         }
 
@@ -162,7 +162,7 @@ defmodule Talan.CountingBloomFilter do
       iex> cbf |> Talan.CountingBloomFilter.count("hat")
       3
   """
-  @spec count(t, any) :: non_neg_integer
+  @spec count(t, any) :: integer
   def count(%CBF{bloom_filter: bloom_filter, counter: counter}, term) do
     hashes = BF.hash_term(bloom_filter, term)
 
