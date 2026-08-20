@@ -14,6 +14,10 @@ defmodule Talan.CountingBloomFilter do
   Counting bloom filters support probabilistic deletion
   of elements but have higher memory consumption because
   they need to store a counter of N bits for every Bloom filter bit.
+
+  Counters are the source of truth for membership. Updates to individual
+  counters are atomic, but reads concurrent with writes may observe an
+  operation in progress.
   """
 
   alias Talan.BloomFilter, as: BF
@@ -72,10 +76,10 @@ defmodule Talan.CountingBloomFilter do
   end
 
   @doc """
-  Puts `term` into `bloom_filter` and increments counters in `counter`.
+  Puts `term` into the filter by incrementing its counters.
 
   After insertion, `member?/2` will return `true` for this `term` unless
-  `delete/2` modifies the bits representing its membership.
+  `delete/2` modifies the counters representing its membership.
 
   Returns `:ok`.
 
@@ -88,8 +92,6 @@ defmodule Talan.CountingBloomFilter do
   @spec put(t, any) :: :ok
   def put(%CBF{bloom_filter: bloom_filter, counter: counter}, term) do
     hashes = BF.hash_term(bloom_filter, term)
-
-    BF.put_hashes(bloom_filter, hashes)
 
     hashes
     |> Enum.each(fn hash ->
@@ -124,10 +126,6 @@ defmodule Talan.CountingBloomFilter do
     hashes
     |> Enum.each(fn hash ->
       Abit.Counter.add(counter, hash, -1)
-
-      if Abit.Counter.get(counter, hash) <= 0 do
-        Abit.set_bit_at(bloom_filter.atomics_ref, hash, 0)
-      end
     end)
 
     :ok
@@ -144,8 +142,10 @@ defmodule Talan.CountingBloomFilter do
       true
   """
   @spec member?(t, any) :: boolean
-  def member?(%CBF{bloom_filter: bloom_filter}, term) do
-    BF.member?(bloom_filter, term)
+  def member?(%CBF{bloom_filter: bloom_filter, counter: counter}, term) do
+    bloom_filter
+    |> BF.hash_term(term)
+    |> Enum.all?(fn hash -> Abit.Counter.get(counter, hash) > 0 end)
   end
 
   @doc """
@@ -189,8 +189,27 @@ defmodule Talan.CountingBloomFilter do
       2
   """
   @spec cardinality(t) :: non_neg_integer
-  def cardinality(%CBF{bloom_filter: bloom_filter}) do
-    BF.cardinality(bloom_filter)
+  def cardinality(%CBF{bloom_filter: bloom_filter, counter: counter}) do
+    set_counter_count = Enum.count(counter, fn value -> value > 0 end)
+    hash_function_count = length(bloom_filter.hash_functions)
+
+    cond do
+      set_counter_count == 0 ->
+        0
+
+      set_counter_count <= hash_function_count ->
+        1
+
+      bloom_filter.filter_length == set_counter_count ->
+        round(bloom_filter.filter_length / hash_function_count)
+
+      true ->
+        est =
+          :math.log(bloom_filter.filter_length - set_counter_count) -
+            :math.log(bloom_filter.filter_length)
+
+        round(bloom_filter.filter_length * -est / hash_function_count)
+    end
   end
 
   @doc """
@@ -198,7 +217,10 @@ defmodule Talan.CountingBloomFilter do
   docs.
   """
   @spec false_positive_probability(t) :: float
-  def false_positive_probability(%CBF{bloom_filter: bloom_filter}) do
-    BF.false_positive_probability(bloom_filter)
+  def false_positive_probability(%CBF{bloom_filter: bloom_filter, counter: counter}) do
+    set_counter_count = Enum.count(counter, fn value -> value > 0 end)
+    hash_function_count = length(bloom_filter.hash_functions)
+
+    :math.pow(set_counter_count / bloom_filter.filter_length, hash_function_count)
   end
 end

@@ -53,6 +53,39 @@ defmodule Talan.CountingBloomFilterTest do
     refute CountingBloomFilter.member?(cbf, "not_present")
   end
 
+  test "counter values are the source of truth for membership" do
+    cbf = CountingBloomFilter.new(1000, hash_functions: [fn _term -> 0 end])
+
+    CountingBloomFilter.put(cbf, "test")
+    Abit.set_bit_at(cbf.bloom_filter.atomics_ref, 0, 0)
+
+    assert CountingBloomFilter.member?(cbf, "test")
+  end
+
+  test "concurrent puts and deletes leave membership consistent with the count" do
+    cbf =
+      CountingBloomFilter.new(1000,
+        counters_bit_size: 32,
+        hash_functions: [fn _term -> 0 end]
+      )
+
+    operations = [:put | List.duplicate(:put, 100) ++ List.duplicate(:delete, 100)]
+
+    operations
+    |> Task.async_stream(
+      fn
+        :put -> CountingBloomFilter.put(cbf, "test")
+        :delete -> CountingBloomFilter.delete(cbf, "test")
+      end,
+      max_concurrency: 20,
+      ordered: false
+    )
+    |> Enum.each(fn result -> assert result == {:ok, :ok} end)
+
+    assert CountingBloomFilter.count(cbf, "test") == 1
+    assert CountingBloomFilter.member?(cbf, "test")
+  end
+
   test "cardinality/1 returns correct estimation" do
     cbf = CountingBloomFilter.new(1000)
     Enum.each(1..100, fn i -> CountingBloomFilter.put(cbf, "item_#{i}") end)
@@ -60,10 +93,34 @@ defmodule Talan.CountingBloomFilterTest do
     assert cardinality >= 95 and cardinality <= 105
   end
 
+  test "cardinality/1 handles empty and saturated counters" do
+    cbf = CountingBloomFilter.new(10, false_positive_probability: 0.1)
+
+    assert CountingBloomFilter.cardinality(cbf) == 0
+
+    Enum.each(0..(cbf.counter.size - 1), fn index ->
+      Abit.Counter.put(cbf.counter, index, 1)
+    end)
+
+    hash_count = length(cbf.bloom_filter.hash_functions)
+    assert CountingBloomFilter.cardinality(cbf) == round(cbf.counter.size / hash_count)
+  end
+
   test "false_positive_probability/1 returns a value between 0 and 1" do
     cbf = CountingBloomFilter.new(1000)
     Enum.each(1..100, fn i -> CountingBloomFilter.put(cbf, "item_#{i}") end)
     fpp = CountingBloomFilter.false_positive_probability(cbf)
     assert fpp > 0 and fpp < 1
+  end
+
+  test "cardinality and false-positive probability derive from counters" do
+    cbf = CountingBloomFilter.new(1000, hash_functions: [fn term -> term end])
+
+    Enum.each(0..9, &CountingBloomFilter.put(cbf, &1))
+
+    assert CountingBloomFilter.cardinality(cbf) == 10
+
+    assert CountingBloomFilter.false_positive_probability(cbf) ==
+             10 / cbf.bloom_filter.filter_length
   end
 end
