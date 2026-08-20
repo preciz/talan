@@ -4,7 +4,7 @@ defmodule Talan do
 
     * `Talan.BloomFilter` - bloom filter based on `:atomics`
     * `Talan.CountingBloomFilter` - counting bloom filter based on `:atomics`
-    * `Talan.Counter` - linear probabilistic counter based on `:atomics`
+    * `Talan.LinearCounter` - linear probabilistic counter based on `:atomics`
   """
 
   @type hash_function :: (term() -> non_neg_integer())

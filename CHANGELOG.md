@@ -9,6 +9,7 @@
   * Safely decode serialized Bloom filters without creating unsafe runtime terms
   * Harden public input validation and typespecs
   * Add in-place `clear/1` operations for all data structures
+  * Rename `Talan.Counter` to `Talan.LinearCounter`
 
 ## v0.2.1
   * Improve syntax and language

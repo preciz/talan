@@ -4,7 +4,7 @@ defmodule Talan.PropertyTest do
 
   alias Talan.BloomFilter
   alias Talan.CountingBloomFilter
-  alias Talan.Counter
+  alias Talan.LinearCounter
 
   @universe 0..127
 
@@ -83,17 +83,17 @@ defmodule Talan.PropertyTest do
     end
   end
 
-  property "Counter cardinality is invariant under duplicates and ordering" do
+  property "LinearCounter cardinality is invariant under duplicates and ordering" do
     check all(values <- list_of(integer(@universe), max_length: 100)) do
-      counter = Counter.new(128, hash_function: &identity/1)
-      Enum.each(values, &Counter.put(counter, &1))
-      cardinality = Counter.cardinality(counter)
+      counter = LinearCounter.new(128, hash_function: &identity/1)
+      Enum.each(values, &LinearCounter.put(counter, &1))
+      cardinality = LinearCounter.cardinality(counter)
 
       values
       |> Enum.reverse()
-      |> Enum.each(&Counter.put(counter, &1))
+      |> Enum.each(&LinearCounter.put(counter, &1))
 
-      assert Counter.cardinality(counter) == cardinality
+      assert LinearCounter.cardinality(counter) == cardinality
     end
   end
 
