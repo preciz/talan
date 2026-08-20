@@ -83,6 +83,16 @@ defmodule Talan.BloomFilterTest do
     assert Enum.all?(after_result)
   end
 
+  test "put/2 does not partially update the filter when hashing fails" do
+    b =
+      BloomFilter.new(100,
+        hash_functions: [fn _term -> 0 end, fn _term -> raise "hash failed" end]
+      )
+
+    assert_raise RuntimeError, "hash failed", fn -> BloomFilter.put(b, :term) end
+    assert Abit.bit_at(b.atomics_ref, 0) == 0
+  end
+
   test "merge" do
     hash_functions = Talan.seed_n_murmur_hash_fun(2)
 

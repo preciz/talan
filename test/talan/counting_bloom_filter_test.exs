@@ -30,6 +30,16 @@ defmodule Talan.CountingBloomFilterTest do
     assert CountingBloomFilter.count(cbf, "test") == 2
   end
 
+  test "put/2 does not partially update counters when hashing fails" do
+    cbf =
+      CountingBloomFilter.new(100,
+        hash_functions: [fn _term -> 0 end, fn _term -> raise "hash failed" end]
+      )
+
+    assert_raise RuntimeError, "hash failed", fn -> CountingBloomFilter.put(cbf, :term) end
+    assert Abit.Counter.get(cbf.counter, 0) == 0
+  end
+
   test "count/2 uses the minimum counter to limit collision inflation" do
     cbf =
       CountingBloomFilter.new(1000,

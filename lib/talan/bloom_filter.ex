@@ -168,21 +168,39 @@ defmodule Talan.BloomFilter do
       :ok
   """
   @spec put(t, any) :: :ok
-  def put(%BF{} = bloom_filter, term) do
-    hashes = hash_term(bloom_filter, term)
-
-    put_hashes(bloom_filter, hashes)
-
-    :ok
+  def put(
+        %BF{
+          atomics_ref: atomics_ref,
+          filter_length: filter_length,
+          hash_functions: hash_functions
+        },
+        term
+      ) do
+    do_put(atomics_ref, filter_length, hash_functions, term)
   end
 
   @doc false
   def put_hashes(%BF{atomics_ref: atomics_ref}, hashes) when is_list(hashes) do
-    hashes
-    |> Enum.each(fn hash ->
-      Abit.set_bit_at(atomics_ref, hash, 1)
-    end)
+    do_put_hashes(atomics_ref, hashes)
   end
+
+  defp do_put(atomics_ref, filter_length, [hash_fun | hash_functions], term) do
+    hash = rem(hash_fun.(term), filter_length)
+
+    # Hash functions are evaluated from left to right before bits are changed,
+    # while bit updates retain hash_term/2's historical reverse order.
+    do_put(atomics_ref, filter_length, hash_functions, term)
+    Abit.set_bit_at(atomics_ref, hash, 1)
+  end
+
+  defp do_put(_atomics_ref, _filter_length, [], _term), do: :ok
+
+  defp do_put_hashes(atomics_ref, [hash | hashes]) do
+    Abit.set_bit_at(atomics_ref, hash, 1)
+    do_put_hashes(atomics_ref, hashes)
+  end
+
+  defp do_put_hashes(_atomics_ref, []), do: :ok
 
   @doc """
   Checks for membership of `term` in `bloom_filter`.
@@ -200,21 +218,28 @@ defmodule Talan.BloomFilter do
       true
   """
   @spec member?(t, any) :: boolean
-  def member?(%BF{atomics_ref: atomics_ref} = bloom_filter, term) do
-    hashes = hash_term(bloom_filter, term)
-
-    do_member?(atomics_ref, hashes)
+  def member?(
+        %BF{
+          atomics_ref: atomics_ref,
+          filter_length: filter_length,
+          hash_functions: hash_functions
+        },
+        term
+      ) do
+    do_member?(atomics_ref, filter_length, hash_functions, term)
   end
 
-  defp do_member?(atomics_ref, [hash | hashes_tl]) do
-    if Abit.bit_at(atomics_ref, hash) == 1 do
-      do_member?(atomics_ref, hashes_tl)
+  defp do_member?(atomics_ref, filter_length, [hash_fun | hash_functions], term) do
+    hash = rem(hash_fun.(term), filter_length)
+
+    if do_member?(atomics_ref, filter_length, hash_functions, term) do
+      Abit.bit_at(atomics_ref, hash) == 1
     else
       false
     end
   end
 
-  defp do_member?(_, []), do: true
+  defp do_member?(_atomics_ref, _filter_length, [], _term), do: true
 
   @doc """
   Hashes `term` with all `hash_functions` of `%Talan.BloomFilter{}`. Custom hash
@@ -314,7 +339,7 @@ defmodule Talan.BloomFilter do
       false
   """
   @spec intersection(nonempty_list(t)) :: t
-  def intersection(list = [first = %BF{atomics_ref: first_atomics_ref} | _tl]) do
+  def intersection(list = [first = %BF{atomics_ref: first_atomics_ref} | filters]) do
     validate_compatible_filters!(list)
 
     %{size: size} = :atomics.info(first_atomics_ref)
@@ -323,7 +348,7 @@ defmodule Talan.BloomFilter do
 
     Abit.union(new_atomics_ref, first_atomics_ref)
 
-    list
+    filters
     |> Enum.reduce(
       new_atomics_ref,
       fn %BF{atomics_ref: atomics_ref}, acc ->
