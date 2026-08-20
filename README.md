@@ -15,7 +15,7 @@ Talán is a Hungarian adverb meaning: maybe, perhaps, probably.
 
 Add `talan` to your list of dependencies in `mix.exs`:
 
-**Note**: it requires OTP-21.2.1 or later.
+**Note**: it requires Elixir 1.14 and OTP 25 or later.
 
 ```elixir
 def deps do

@@ -8,7 +8,7 @@ defmodule Talan.MixProject do
     [
       app: :talan,
       version: @version,
-      elixir: "~> 1.7",
+      elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       docs: docs(),
@@ -30,7 +30,7 @@ defmodule Talan.MixProject do
   defp deps do
     [
       {:murmur, "~> 2.0"},
-      {:abit, "~> 0.4.0"},
+      {:abit, "~> 1.0.0"},
       {:stream_data, "~> 1.4", only: :test},
       {:ex_doc, "~> 0.40", only: :dev, runtime: false}
     ]
