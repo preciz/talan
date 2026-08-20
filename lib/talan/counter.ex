@@ -96,6 +96,10 @@ defmodule Talan.Counter do
     set_bit_count = Abit.set_bits_count(atomics_ref)
     unset_bit_count = bit_count - set_bit_count
 
-    round(-bit_count * :math.log(unset_bit_count / bit_count))
+    if unset_bit_count == 0 do
+      bit_count
+    else
+      round(-bit_count * :math.log(unset_bit_count / bit_count))
+    end
   end
 end

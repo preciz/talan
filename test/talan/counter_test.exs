@@ -32,4 +32,12 @@ defmodule Talan.CounterTest do
     c = Counter.new(1000)
     assert Counter.cardinality(c) == 0
   end
+
+  test "cardinality/1 returns the filter length when all bits are set" do
+    c = Counter.new(1, hash_function: fn value -> value end)
+
+    Enum.each(0..(c.filter_length - 1), &Counter.put(c, &1))
+
+    assert Counter.cardinality(c) == c.filter_length
+  end
 end
