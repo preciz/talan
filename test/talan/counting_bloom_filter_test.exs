@@ -15,6 +15,14 @@ defmodule Talan.CountingBloomFilterTest do
     assert %CountingBloomFilter{} = cbf
   end
 
+  test "new/2 allocates one counter per Bloom filter bit" do
+    for counters_bit_size <- [2, 4, 8, 16, 32] do
+      cbf = CountingBloomFilter.new(1000, counters_bit_size: counters_bit_size)
+
+      assert cbf.counter.size == cbf.bloom_filter.filter_length
+    end
+  end
+
   test "put/2 and count/2 work correctly" do
     cbf = CountingBloomFilter.new(1000)
     CountingBloomFilter.put(cbf, "test")

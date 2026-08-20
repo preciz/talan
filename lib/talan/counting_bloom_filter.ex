@@ -60,7 +60,7 @@ defmodule Talan.CountingBloomFilter do
 
     counter =
       Abit.Counter.new(
-        bloom_filter.filter_length * counters_bit_size,
+        bloom_filter.filter_length,
         counters_bit_size,
         signed: signed
       )
