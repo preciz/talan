@@ -1,7 +1,7 @@
 defmodule Talan.BloomFilter do
   @moduledoc """
   Bloom filter implementation with **concurrent accessibility**,
-  powered by [:atomics](http://erlang.org/doc/man/atomics.html) module.
+  powered by the [:atomics](http://erlang.org/doc/man/atomics.html) module.
 
   "A Bloom filter is a space-efficient probabilistic data structure,
   conceived by Burton Howard Bloom in 1970,
@@ -15,7 +15,7 @@ defmodule Talan.BloomFilter do
 
   ## Features
 
-    * Fixed size Bloom filter
+    * Fixed-size Bloom filter
     * Concurrent reads & writes
     * Custom & default hash functions
     * Merge multiple Bloom filters into one
@@ -52,7 +52,7 @@ defmodule Talan.BloomFilter do
 
   ## Options
     * `:false_positive_probability` - a float, defaults to 0.01
-    * `:hash_functions` - a list of hash functions, defaults to randomly seeded murmur
+    * `:hash_functions` - a list of hash functions, defaults to randomly seeded Murmur
 
   ## Examples
 
@@ -144,7 +144,7 @@ defmodule Talan.BloomFilter do
   end
 
   @doc """
-  Puts `term` into `bloom_filter` a `%Talan.BloomFilter{}` struct.
+  Puts `term` into `bloom_filter`, a `%Talan.BloomFilter{}` struct.
 
   After this the `member?` function will always return `true`
   for the membership of `term`.
@@ -179,8 +179,8 @@ defmodule Talan.BloomFilter do
   @doc """
   Checks for membership of `term` in `bloom_filter`.
 
-  Returns `false` if not a member. (definitely not member)
-  Returns `true` if maybe a member. (possibly member)
+  Returns `false` if not a member. (definitely not a member)
+  Returns `true` if maybe a member. (possibly a member)
 
   ## Examples
 
@@ -235,11 +235,11 @@ defmodule Talan.BloomFilter do
   defp do_hash_term(_, [], _, acc), do: acc
 
   @doc """
-  Merge multiple `%Talan.BloomFilter{}` structs's atomics into one new struct.
+  Merges the atomics of multiple `%Talan.BloomFilter{}` structs into one new struct.
 
   Note: To work correctly filters with identical size & hash functions must be used.
 
-  Returns a new `%Talan.BloomFilter{}` struct which set bits are the merged set bits of
+  Returns a new `%Talan.BloomFilter{}` struct whose set bits are the merged set bits of
   the bloom filters in the `list`.
 
   ## Examples
@@ -274,12 +274,12 @@ defmodule Talan.BloomFilter do
   end
 
   @doc """
-  Intersection of `%Talan.BloomFilter{}` structs's atomics into one new struct.
+  Intersects the atomics of multiple `%Talan.BloomFilter{}` structs into one new struct.
 
   Note: To work correctly filters with identical size & hash functions must be used.
 
-  Returns a new `%BloomFilter{}` struct which set bits are the intersection
-  the bloom filters in the `list`.
+  Returns a new `%BloomFilter{}` struct whose set bits are the intersection of
+  the Bloom filters in the `list`.
 
   ## Examples
 
@@ -316,7 +316,7 @@ defmodule Talan.BloomFilter do
   end
 
   @doc """
-  Returns a non negative integer representing the
+  Returns a non-negative integer representing the
   estimated cardinality count of unique elements in the filter.
 
   ## Examples

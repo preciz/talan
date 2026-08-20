@@ -1,11 +1,11 @@
 defmodule Talan.CountingBloomFilter do
   @moduledoc """
   Counting bloom filter implementation with **concurrent accessibility**,
-  powered by [:atomics](http://erlang.org/doc/man/atomics.html) module.
+  powered by the [:atomics](http://erlang.org/doc/man/atomics.html) module.
 
   ## Features
 
-    * Fixed size Counting Bloom filter
+    * Fixed-size Counting Bloom filter
     * Concurrent reads & writes
     * Custom & default hash functions
     * Estimate number of unique elements
@@ -13,7 +13,7 @@ defmodule Talan.CountingBloomFilter do
 
   Counting bloom filters support probabilistic deletion
   of elements but have higher memory consumption because
-  they need to store a counter of N bits for every bloom filter bit.
+  they need to store a counter of N bits for every Bloom filter bit.
   """
 
   alias Talan.BloomFilter, as: BF
@@ -37,7 +37,7 @@ defmodule Talan.CountingBloomFilter do
     * `:counters_bit_size` - bit size of counters, defaults to `8`
     * `:signed` - to have signed or unsigned counters, defaults to `true`
     * `:false_positive_probability` - a float, defaults to `0.01`
-    * `:hash_functions` - a list of hash functions, defaults to randomly seeded murmur
+    * `:hash_functions` - a list of hash functions, defaults to randomly seeded Murmur
 
   ## Examples
 
@@ -154,7 +154,7 @@ defmodule Talan.CountingBloomFilter do
 
   This means that (given no hash collisions) it returns how many times
   the item was put into the CountingBloomFilter. A few hash collisions
-  should be also fine since it returns the average count of the counters.
+  should also be fine since it returns the average count of the counters.
   A single item is hashed with multiple counters.
 
   ## Examples

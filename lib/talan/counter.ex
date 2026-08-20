@@ -1,7 +1,7 @@
 defmodule Talan.Counter do
   @moduledoc """
   Linear probabilistic counter implementation with **concurrent accessibility**,
-  powered by [:atomics](http://erlang.org/doc/man/atomics.html) module for cardinality estimation.
+  powered by the [:atomics](http://erlang.org/doc/man/atomics.html) module for cardinality estimation.
 
   Cardinality is the count of unique elements.
 
@@ -23,11 +23,11 @@ defmodule Talan.Counter do
   @doc """
   Returns a new `%Talan.Counter{}` struct.
 
-  `expected_cardinality` is the max number of uniq items the counter will
-  handle with approx 1% of error rate.
+  `expected_cardinality` is the maximum number of unique items the counter will
+  handle with an approximately 1% error rate.
 
   ## Options
-    * `hash_function` - defaults to `Murmur.hash_x64_128/1`
+    * `:hash_function` - defaults to `Murmur.hash_x64_128/1`
 
   ## Examples
 
@@ -55,7 +55,7 @@ defmodule Talan.Counter do
   @doc """
   Hashes `term` and sets a bit to mark it has been seen.
 
-  Doesn't store the `term` so it's space efficient.
+  Doesn't store the `term` so it's space-efficient.
   Uses `:atomics` so it's mutable & highly concurrent.
 
   Returns `:ok`.

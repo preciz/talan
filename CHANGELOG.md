@@ -6,7 +6,7 @@
   * Replace deprecated `Abit.merge/2` with `Abit.union/2`
 
 ## v0.2.0
-  * BREAKING: Use Murmur v2.0 that fixes 128bit hash generation to be consistent with the original implementation
+  * BREAKING: Use Murmur v2.0 that fixes 128-bit hash generation to be consistent with the original implementation
 
 ## v0.1.4
   * Fix cardinality estimation when `set_bits_count` <= `hash_function_count` due to overlap
@@ -18,4 +18,4 @@
   * Update murmur dependency to 1.0.3 to fix compilation warnings
 
 ## v0.1.1
-  * Fix - work with elixir 1.7 by not using Kernel.floor/1 & Kernel.ceil/1
+  * Fix - work with Elixir 1.7 by not using Kernel.floor/1 & Kernel.ceil/1

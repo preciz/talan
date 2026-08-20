@@ -3,7 +3,7 @@ defmodule Talan.StreamTest do
 
   doctest Talan.Stream
 
-  test "rejects non uniq elements" do
+  test "rejects duplicate elements" do
     list = ~w(a b c a b c d a)
 
     bloom_filter = Talan.BloomFilter.new(1000, false_positive_probability: 0.01)
