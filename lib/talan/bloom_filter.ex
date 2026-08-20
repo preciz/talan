@@ -87,7 +87,7 @@ defmodule Talan.BloomFilter do
 
     filter_length = required_filter_length(cardinality, false_positive_probability)
 
-    atomics_arity = max(div(filter_length, 64), 1)
+    atomics_arity = max(div(filter_length + 63, 64), 1)
 
     atomics_ref = :atomics.new(atomics_arity, signed: false)
 
@@ -396,7 +396,7 @@ defmodule Talan.BloomFilter do
 
       iex> b = Talan.BloomFilter.new(1000)
       iex> b |> Talan.BloomFilter.bits_info()
-      %{total_bits: 9536, set_bits_count: 0, set_ratio: 0.0}
+      %{total_bits: 9600, set_bits_count: 0, set_ratio: 0.0}
   """
   @spec bits_info(t()) :: map()
   def bits_info(%BF{atomics_ref: atomics_ref, filter_length: filter_length}) do

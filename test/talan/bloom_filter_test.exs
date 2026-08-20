@@ -11,6 +11,22 @@ defmodule Talan.BloomFilterTest do
     assert length(b.hash_functions) == 7
   end
 
+  test "new/2 allocates at least the required number of bits" do
+    cardinality = 10_000
+    false_positive_probability = 0.01
+
+    required_bits =
+      BloomFilter.required_filter_length(cardinality, false_positive_probability)
+
+    b =
+      BloomFilter.new(cardinality,
+        false_positive_probability: false_positive_probability
+      )
+
+    assert b.filter_length >= required_bits
+    assert b.filter_length < required_bits + 64
+  end
+
   test "new/2 creates a BloomFilter with custom options" do
     custom_hash_functions = [&:erlang.phash2/1]
 
