@@ -396,6 +396,9 @@ defmodule Talan.BloomFilter do
   Returns a non-negative integer representing the estimated number of unique
   elements in the filter.
 
+  A saturated filter has no unset bits, so its cardinality cannot be estimated
+  reliably; in that case this function returns a finite fallback value.
+
   ## Examples
 
       iex> b = Talan.BloomFilter.new(1000)
