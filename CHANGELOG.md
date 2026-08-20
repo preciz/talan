@@ -2,22 +2,12 @@
 
 ## Unreleased
   * Update `abit` to `~> 1.0.0` and require Elixir 1.14 / OTP 25 or later
-  * Validate constructor and sizing arguments consistently
-  * Document that `Talan.Stream.uniq/2` mutates its Bloom filter
-  * Test the minimum and current runtimes in CI and enforce formatting
-  * Share cardinality estimation and simplify generated filter code
-  * Add precise typespecs for all public functions
-  * Improve documentation wording and fix typos
-  * Update locked dependencies, including Murmur to 2.0.1 and ExDoc to 0.40.3
-  * Return a finite cardinality estimate when a linear counter is saturated
-  * Round Bloom filter storage up so it always meets the required bit count
-  * Allocate exactly one Counting Bloom filter counter per Bloom filter bit
-  * Validate Bloom filter compatibility before merge and intersection operations
+  * Correct Counting Bloom membership, frequency, cardinality, and storage behavior
+  * Allocate filters and counters to fully meet their requested capacity
+  * Return finite cardinality estimates for saturated filters and counters
+  * Reject incompatible Bloom filters before merge and intersection operations
   * Safely decode serialized Bloom filters without creating unsafe runtime terms
-  * Use Counting Bloom filter counters as the single source of membership state
-  * Estimate Counting Bloom filter frequencies from the minimum selected counter
-  * Avoid allocating an unused bit array for Counting Bloom filters
-  * Round linear counter storage up to meet its target size
+  * Harden public input validation and typespecs
 
 ## v0.2.1
   * Improve syntax and language
