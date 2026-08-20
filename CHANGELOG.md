@@ -9,6 +9,8 @@
   * Validate Bloom filter compatibility before merge and intersection operations
   * Safely decode serialized Bloom filters without creating unsafe runtime terms
   * Use Counting Bloom filter counters as the single source of membership state
+  * Estimate Counting Bloom filter frequencies from the minimum selected counter
+  * Avoid allocating an unused bit array for Counting Bloom filters
 
 ## v0.2.1
   * Improve syntax and language

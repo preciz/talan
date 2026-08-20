@@ -19,7 +19,7 @@ defmodule Talan.CountingBloomFilterTest do
     for counters_bit_size <- [2, 4, 8, 16, 32] do
       cbf = CountingBloomFilter.new(1000, counters_bit_size: counters_bit_size)
 
-      assert cbf.counter.size == cbf.bloom_filter.filter_length
+      assert cbf.counter.size == cbf.filter_length
     end
   end
 
@@ -28,6 +28,24 @@ defmodule Talan.CountingBloomFilterTest do
     CountingBloomFilter.put(cbf, "test")
     CountingBloomFilter.put(cbf, "test")
     assert CountingBloomFilter.count(cbf, "test") == 2
+  end
+
+  test "count/2 uses the minimum counter to limit collision inflation" do
+    cbf =
+      CountingBloomFilter.new(1000,
+        hash_functions: [
+          fn _term -> 0 end,
+          fn
+            :target -> 1
+            :colliding -> 2
+          end
+        ]
+      )
+
+    CountingBloomFilter.put(cbf, :target)
+    Enum.each(1..10, fn _ -> CountingBloomFilter.put(cbf, :colliding) end)
+
+    assert CountingBloomFilter.count(cbf, :target) == 1
   end
 
   test "delete/2 decrements count" do
@@ -53,13 +71,12 @@ defmodule Talan.CountingBloomFilterTest do
     refute CountingBloomFilter.member?(cbf, "not_present")
   end
 
-  test "counter values are the source of truth for membership" do
+  test "does not allocate a redundant Bloom filter bit array" do
     cbf = CountingBloomFilter.new(1000, hash_functions: [fn _term -> 0 end])
 
-    CountingBloomFilter.put(cbf, "test")
-    Abit.set_bit_at(cbf.bloom_filter.atomics_ref, 0, 0)
-
-    assert CountingBloomFilter.member?(cbf, "test")
+    refute Map.has_key?(cbf, :bloom_filter)
+    refute Map.has_key?(cbf, :atomics_ref)
+    assert cbf.counter.size == cbf.filter_length
   end
 
   test "concurrent puts and deletes leave membership consistent with the count" do
@@ -102,7 +119,7 @@ defmodule Talan.CountingBloomFilterTest do
       Abit.Counter.put(cbf.counter, index, 1)
     end)
 
-    hash_count = length(cbf.bloom_filter.hash_functions)
+    hash_count = length(cbf.hash_functions)
     assert CountingBloomFilter.cardinality(cbf) == round(cbf.counter.size / hash_count)
   end
 
@@ -121,6 +138,6 @@ defmodule Talan.CountingBloomFilterTest do
     assert CountingBloomFilter.cardinality(cbf) == 10
 
     assert CountingBloomFilter.false_positive_probability(cbf) ==
-             10 / cbf.bloom_filter.filter_length
+             10 / cbf.filter_length
   end
 end

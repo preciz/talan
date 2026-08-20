@@ -23,11 +23,12 @@ defmodule Talan.CountingBloomFilter do
   alias Talan.BloomFilter, as: BF
   alias Talan.CountingBloomFilter, as: CBF
 
-  @enforce_keys [:bloom_filter, :counter]
-  defstruct [:bloom_filter, :counter]
+  @enforce_keys [:filter_length, :hash_functions, :counter]
+  defstruct [:filter_length, :hash_functions, :counter]
 
   @type t :: %__MODULE__{
-          bloom_filter: BF.t(),
+          filter_length: pos_integer,
+          hash_functions: list,
           counter: Abit.Counter.t()
         }
 
@@ -57,20 +58,21 @@ defmodule Talan.CountingBloomFilter do
   """
   @spec new(pos_integer, list) :: t
   def new(cardinality, options \\ []) do
-    bloom_filter = BF.new(cardinality, options)
+    {filter_length, hash_functions} = BF.configuration(cardinality, options)
 
     counters_bit_size = options |> Keyword.get(:counters_bit_size, 8)
     signed = options |> Keyword.get(:signed, true)
 
     counter =
       Abit.Counter.new(
-        bloom_filter.filter_length,
+        filter_length,
         counters_bit_size,
         signed: signed
       )
 
     %CBF{
-      bloom_filter: bloom_filter,
+      filter_length: filter_length,
+      hash_functions: hash_functions,
       counter: counter
     }
   end
@@ -90,12 +92,12 @@ defmodule Talan.CountingBloomFilter do
       :ok
   """
   @spec put(t, any) :: :ok
-  def put(%CBF{bloom_filter: bloom_filter, counter: counter}, term) do
-    hashes = BF.hash_term(bloom_filter, term)
+  def put(%CBF{} = counting_bloom_filter, term) do
+    hashes = hash_term(counting_bloom_filter, term)
 
     hashes
     |> Enum.each(fn hash ->
-      Abit.Counter.add(counter, hash, 1)
+      Abit.Counter.add(counting_bloom_filter.counter, hash, 1)
     end)
 
     :ok
@@ -120,12 +122,12 @@ defmodule Talan.CountingBloomFilter do
       -1
   """
   @spec delete(t, any) :: :ok
-  def delete(%CBF{bloom_filter: bloom_filter, counter: counter}, term) do
-    hashes = BF.hash_term(bloom_filter, term)
+  def delete(%CBF{} = counting_bloom_filter, term) do
+    hashes = hash_term(counting_bloom_filter, term)
 
     hashes
     |> Enum.each(fn hash ->
-      Abit.Counter.add(counter, hash, -1)
+      Abit.Counter.add(counting_bloom_filter.counter, hash, -1)
     end)
 
     :ok
@@ -142,16 +144,16 @@ defmodule Talan.CountingBloomFilter do
       true
   """
   @spec member?(t, any) :: boolean
-  def member?(%CBF{bloom_filter: bloom_filter, counter: counter}, term) do
-    bloom_filter
-    |> BF.hash_term(term)
+  def member?(%CBF{counter: counter} = counting_bloom_filter, term) do
+    counting_bloom_filter
+    |> hash_term(term)
     |> Enum.all?(fn hash -> Abit.Counter.get(counter, hash) > 0 end)
   end
 
   @doc """
   Returns the estimated number of times `term` was inserted. The estimate is the
-  average of the counters selected by the term's hashes, so hash collisions may
-  affect it.
+  minimum of the counters selected by the term's hashes. Hash collisions may
+  inflate the estimate.
 
   ## Examples
 
@@ -163,16 +165,12 @@ defmodule Talan.CountingBloomFilter do
       3
   """
   @spec count(t, any) :: integer
-  def count(%CBF{bloom_filter: bloom_filter, counter: counter}, term) do
-    hashes = BF.hash_term(bloom_filter, term)
+  def count(%CBF{counter: counter} = counting_bloom_filter, term) do
+    hashes = hash_term(counting_bloom_filter, term)
 
-    counters =
-      hashes
-      |> Enum.map(fn hash ->
-        Abit.Counter.get(counter, hash)
-      end)
-
-    round(Enum.sum(counters) / length(counters))
+    hashes
+    |> Enum.map(fn hash -> Abit.Counter.get(counter, hash) end)
+    |> Enum.min()
   end
 
   @doc """
@@ -189,9 +187,10 @@ defmodule Talan.CountingBloomFilter do
       2
   """
   @spec cardinality(t) :: non_neg_integer
-  def cardinality(%CBF{bloom_filter: bloom_filter, counter: counter}) do
+  def cardinality(%CBF{} = counting_bloom_filter) do
+    counter = counting_bloom_filter.counter
     set_counter_count = Enum.count(counter, fn value -> value > 0 end)
-    hash_function_count = length(bloom_filter.hash_functions)
+    hash_function_count = length(counting_bloom_filter.hash_functions)
 
     cond do
       set_counter_count == 0 ->
@@ -200,15 +199,15 @@ defmodule Talan.CountingBloomFilter do
       set_counter_count <= hash_function_count ->
         1
 
-      bloom_filter.filter_length == set_counter_count ->
-        round(bloom_filter.filter_length / hash_function_count)
+      counting_bloom_filter.filter_length == set_counter_count ->
+        round(counting_bloom_filter.filter_length / hash_function_count)
 
       true ->
         est =
-          :math.log(bloom_filter.filter_length - set_counter_count) -
-            :math.log(bloom_filter.filter_length)
+          :math.log(counting_bloom_filter.filter_length - set_counter_count) -
+            :math.log(counting_bloom_filter.filter_length)
 
-        round(bloom_filter.filter_length * -est / hash_function_count)
+        round(counting_bloom_filter.filter_length * -est / hash_function_count)
     end
   end
 
@@ -217,10 +216,15 @@ defmodule Talan.CountingBloomFilter do
   docs.
   """
   @spec false_positive_probability(t) :: float
-  def false_positive_probability(%CBF{bloom_filter: bloom_filter, counter: counter}) do
+  def false_positive_probability(%CBF{} = counting_bloom_filter) do
+    counter = counting_bloom_filter.counter
     set_counter_count = Enum.count(counter, fn value -> value > 0 end)
-    hash_function_count = length(bloom_filter.hash_functions)
+    hash_function_count = length(counting_bloom_filter.hash_functions)
 
-    :math.pow(set_counter_count / bloom_filter.filter_length, hash_function_count)
+    :math.pow(set_counter_count / counting_bloom_filter.filter_length, hash_function_count)
+  end
+
+  defp hash_term(%CBF{filter_length: filter_length, hash_functions: hash_functions}, term) do
+    BF.hash_term(filter_length, hash_functions, term)
   end
 end

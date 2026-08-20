@@ -62,6 +62,20 @@ defmodule Talan.BloomFilter do
   """
   @spec new(pos_integer, list) :: t
   def new(cardinality, options \\ []) when is_integer(cardinality) and cardinality > 0 do
+    {filter_length, hash_functions} = configuration(cardinality, options)
+    atomics_ref = :atomics.new(div(filter_length, 64), signed: false)
+
+    %BF{
+      atomics_ref: atomics_ref,
+      filter_length: filter_length,
+      hash_functions: hash_functions
+    }
+  end
+
+  @doc false
+  @spec configuration(pos_integer, list) :: {pos_integer, list}
+  def configuration(cardinality, options \\ [])
+      when is_integer(cardinality) and cardinality > 0 do
     false_positive_probability = options |> Keyword.get(:false_positive_probability, 0.01)
     hash_functions = options |> Keyword.get(:hash_functions, [])
 
@@ -89,13 +103,7 @@ defmodule Talan.BloomFilter do
 
     atomics_arity = max(div(filter_length + 63, 64), 1)
 
-    atomics_ref = :atomics.new(atomics_arity, signed: false)
-
-    %BF{
-      atomics_ref: atomics_ref,
-      filter_length: atomics_arity * 64,
-      hash_functions: hash_functions
-    }
+    {atomics_arity * 64, hash_functions}
   end
 
   @doc """
@@ -220,6 +228,12 @@ defmodule Talan.BloomFilter do
   """
   @spec hash_term(t, any) :: list(integer)
   def hash_term(%BF{filter_length: filter_length, hash_functions: hash_functions}, term) do
+    do_hash_term(filter_length, hash_functions, term)
+  end
+
+  @doc false
+  @spec hash_term(pos_integer, list, any) :: list(integer)
+  def hash_term(filter_length, hash_functions, term) do
     do_hash_term(filter_length, hash_functions, term)
   end
 
