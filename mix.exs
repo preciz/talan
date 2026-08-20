@@ -32,6 +32,7 @@ defmodule Talan.MixProject do
       {:murmur, "~> 2.0"},
       {:abit, "~> 1.0.0"},
       {:stream_data, "~> 1.4", only: :test},
+      {:credo, "~> 1.7.19", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.40", only: :dev, runtime: false}
     ]
   end
