@@ -31,10 +31,18 @@ defmodule Talan.CountingBloomFilter do
   defstruct [:filter_length, :hash_functions, :counter]
 
   @type t :: %__MODULE__{
-          filter_length: pos_integer,
-          hash_functions: list,
+          filter_length: pos_integer(),
+          hash_functions: nonempty_list(Talan.hash_function()),
           counter: Abit.Counter.t()
         }
+
+  @type counters_bit_size :: 2 | 4 | 8 | 16 | 32
+  @type option ::
+          {:counters_bit_size, counters_bit_size()}
+          | {:signed, boolean()}
+          | {:false_positive_probability, float()}
+          | {:hash_functions, list(Talan.hash_function())}
+  @type options :: list(option())
 
   @doc """
   Returns a new `%Talan.CountingBloomFilter{}` struct.
@@ -63,12 +71,14 @@ defmodule Talan.CountingBloomFilter do
       iex> cbf |> Talan.CountingBloomFilter.count("phone")
       1
   """
-  @spec new(pos_integer, keyword) :: t
+  @spec new(pos_integer()) :: t()
+  @spec new(pos_integer(), options()) :: t()
   def new(cardinality, options \\ []) do
     Validation.positive_integer!(cardinality, :cardinality)
     Validation.options!(options, @options)
 
-    {filter_length, hash_functions} = BF.configuration(cardinality, options)
+    bloom_options = Keyword.take(options, [:false_positive_probability, :hash_functions])
+    {filter_length, hash_functions} = BF.configuration(cardinality, bloom_options)
 
     counters_bit_size = options |> Keyword.get(:counters_bit_size, 8)
     signed = options |> Keyword.get(:signed, true)

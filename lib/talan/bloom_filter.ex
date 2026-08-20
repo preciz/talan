@@ -42,9 +42,19 @@ defmodule Talan.BloomFilter do
   defstruct [:atomics_ref, :filter_length, :hash_functions]
 
   @type t :: %__MODULE__{
-          atomics_ref: reference,
-          filter_length: non_neg_integer,
-          hash_functions: list
+          atomics_ref: reference(),
+          filter_length: pos_integer(),
+          hash_functions: nonempty_list(Talan.hash_function())
+        }
+
+  @type option ::
+          {:false_positive_probability, float()}
+          | {:hash_functions, list(Talan.hash_function())}
+  @type options :: list(option())
+  @type bits_info :: %{
+          total_bits: pos_integer(),
+          set_bits_count: non_neg_integer(),
+          set_ratio: float()
         }
 
   @doc """
@@ -66,7 +76,8 @@ defmodule Talan.BloomFilter do
       iex> bloom_filter |> Talan.BloomFilter.put("Barna Kovacs")
       :ok
   """
-  @spec new(pos_integer, keyword) :: t
+  @spec new(pos_integer()) :: t()
+  @spec new(pos_integer(), options()) :: t()
   def new(cardinality, options \\ []) do
     Validation.positive_integer!(cardinality, :cardinality)
     Validation.options!(options, @options)
@@ -82,7 +93,9 @@ defmodule Talan.BloomFilter do
   end
 
   @doc false
-  @spec configuration(pos_integer, keyword) :: {pos_integer, list}
+  @spec configuration(pos_integer()) :: {pos_integer(), nonempty_list(Talan.hash_function())}
+  @spec configuration(pos_integer(), options()) ::
+          {pos_integer(), nonempty_list(Talan.hash_function())}
   def configuration(cardinality, options \\ []) do
     Validation.positive_integer!(cardinality, :cardinality)
 
@@ -125,8 +138,10 @@ defmodule Talan.BloomFilter do
       iex> Talan.BloomFilter.required_hash_function_count(0.0001)
       14
   """
-  @spec required_hash_function_count(float) :: non_neg_integer
+  @spec required_hash_function_count(float()) :: pos_integer()
   def required_hash_function_count(false_positive_probability) do
+    Validation.probability!(false_positive_probability, :false_positive_probability)
+
     -:math.log2(false_positive_probability)
     |> Float.ceil()
     |> round()
@@ -145,7 +160,7 @@ defmodule Talan.BloomFilter do
       iex> Talan.BloomFilter.required_filter_length(10_000, 0.01)
       95851
   """
-  @spec required_filter_length(non_neg_integer, float) :: non_neg_integer
+  @spec required_filter_length(pos_integer(), float()) :: pos_integer()
   def required_filter_length(cardinality, false_positive_probability)
       when is_integer(cardinality) and cardinality > 0 and false_positive_probability > 0 and
              false_positive_probability < 1 do
@@ -183,6 +198,7 @@ defmodule Talan.BloomFilter do
   end
 
   @doc false
+  @spec put_hashes(t(), list(non_neg_integer())) :: :ok
   def put_hashes(%BF{atomics_ref: atomics_ref}, hashes) when is_list(hashes) do
     do_put_hashes(atomics_ref, hashes)
   end
@@ -253,13 +269,14 @@ defmodule Talan.BloomFilter do
       Talan.BloomFilter.hash_term(b, :any_term_can_be_hashed)
       [9386, 8954, 8645, 4068, 5445, 6914, 2844]
   """
-  @spec hash_term(t, any) :: list(integer)
+  @spec hash_term(t(), term()) :: nonempty_list(non_neg_integer())
   def hash_term(%BF{filter_length: filter_length, hash_functions: hash_functions}, term) do
     do_hash_term(filter_length, hash_functions, term)
   end
 
   @doc false
-  @spec hash_term(pos_integer, list, any) :: list(integer)
+  @spec hash_term(pos_integer(), list(Talan.hash_function()), term()) ::
+          list(non_neg_integer())
   def hash_term(filter_length, hash_functions, term) do
     do_hash_term(filter_length, hash_functions, term)
   end
@@ -430,7 +447,7 @@ defmodule Talan.BloomFilter do
       iex> b |> Talan.BloomFilter.bits_info()
       %{total_bits: 9600, set_bits_count: 0, set_ratio: 0.0}
   """
-  @spec bits_info(t()) :: map()
+  @spec bits_info(t()) :: bits_info()
   def bits_info(%BF{atomics_ref: atomics_ref, filter_length: filter_length}) do
     set_bits_count = Abit.set_bits_count(atomics_ref)
 
@@ -456,7 +473,7 @@ defmodule Talan.BloomFilter do
 
   """
   @doc since: "0.1.3"
-  @spec serialize(t()) :: binary
+  @spec serialize(t()) :: binary()
   def serialize(%BF{
         atomics_ref: atomics_ref,
         filter_length: filter_length,
@@ -486,7 +503,7 @@ defmodule Talan.BloomFilter do
 
   """
   @doc since: "0.1.3"
-  @spec deserialize(binary) :: t()
+  @spec deserialize(binary()) :: t()
   def deserialize(binary) when is_binary(binary) do
     map =
       binary

@@ -192,6 +192,12 @@ defmodule Talan.BloomFilterTest do
     assert BloomFilter.required_hash_function_count(0.01) == 7
     assert BloomFilter.required_hash_function_count(0.001) == 10
     assert BloomFilter.required_hash_function_count(0.0001) == 14
+
+    for probability <- [0.0, 1.0, -0.1, 2.0] do
+      assert_raise ArgumentError, ~r/false_positive_probability/, fn ->
+        BloomFilter.required_hash_function_count(probability)
+      end
+    end
   end
 
   test "required_filter_length/2" do

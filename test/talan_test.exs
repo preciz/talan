@@ -43,4 +43,25 @@ defmodule TalanTest do
 
     assert Talan.to_bitstring(<<>>) == []
   end
+
+  test "all public functions have typespecs" do
+    {:ok, modules} = :application.get_key(:talan, :modules)
+
+    for module <- modules do
+      exports = MapSet.new(module.__info__(:functions))
+      {:ok, specs} = Code.Typespec.fetch_specs(module)
+
+      specified =
+        specs
+        |> Enum.map(fn {{name, arity}, _specs} -> {name, arity} end)
+        |> MapSet.new()
+
+      missing =
+        exports
+        |> MapSet.difference(specified)
+        |> Enum.reject(fn {name, _arity} -> name == :__struct__ end)
+
+      assert missing == [], "#{inspect(module)} is missing typespecs for #{inspect(missing)}"
+    end
+  end
 end

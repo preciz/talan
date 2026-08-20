@@ -24,7 +24,7 @@ defmodule Talan.Stream do
       iex> Talan.Stream.uniq(list, bloom_filter) |> Enum.to_list()
       ["a", "b", "c"]
   """
-  @spec uniq(Enumerable.t(), BloomFilter.t()) :: Enumerable.t()
+  @spec uniq(Enumerable.t(), BloomFilter.t()) :: %Stream{}
   def uniq(enum, bloom_filter) do
     enum
     |> Stream.reject(fn x ->

@@ -13,10 +13,12 @@ defmodule Talan.Counter do
   defstruct [:atomics_ref, :filter_length, :hash_function]
 
   @type t :: %__MODULE__{
-          atomics_ref: reference,
-          filter_length: non_neg_integer,
-          hash_function: function
+          atomics_ref: reference(),
+          filter_length: pos_integer(),
+          hash_function: Talan.hash_function()
         }
+  @type option :: {:hash_function, Talan.hash_function()}
+  @type options :: list(option())
 
   alias Talan.Counter
   alias Talan.Validation
@@ -44,7 +46,8 @@ defmodule Talan.Counter do
       iex> c |> Talan.Counter.cardinality()
       3
   """
-  @spec new(pos_integer, keyword) :: t
+  @spec new(pos_integer()) :: t()
+  @spec new(pos_integer(), options()) :: t()
   def new(expected_cardinality, options \\ []) do
     Validation.positive_integer!(expected_cardinality, :expected_cardinality)
     Validation.options!(options, @options)
