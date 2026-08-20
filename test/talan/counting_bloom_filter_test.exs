@@ -112,9 +112,13 @@ defmodule Talan.CountingBloomFilterTest do
   test "count/2 can return a negative count after deleting an absent term" do
     cbf = CountingBloomFilter.new(1000)
 
-    CountingBloomFilter.delete(cbf, "absent")
+    assert :ok = CountingBloomFilter.delete(cbf, "absent")
 
     assert CountingBloomFilter.count(cbf, "absent") == -1
+
+    assert :ok = CountingBloomFilter.put(cbf, "absent")
+    assert CountingBloomFilter.count(cbf, "absent") == 0
+    refute CountingBloomFilter.member?(cbf, "absent")
   end
 
   test "put/2 reports counter overflow" do
@@ -140,6 +144,19 @@ defmodule Talan.CountingBloomFilterTest do
     assert :ok = CountingBloomFilter.delete(cbf, "absent")
     assert {:error, :value_out_of_bounds} = CountingBloomFilter.delete(cbf, "absent")
     assert CountingBloomFilter.count(cbf, "absent") == -2
+  end
+
+  test "put/2 propagates saturation from any hash and completes other counter updates" do
+    cbf =
+      CountingBloomFilter.new(1,
+        counters_bit_size: 2,
+        hash_functions: [fn _term -> 0 end, fn _term -> 1 end]
+      )
+
+    assert {:ok, {1, 1}} = Abit.Counter.put(cbf.counter, 1, 1)
+    assert {:error, :value_out_of_bounds} = CountingBloomFilter.put(cbf, "present")
+    assert Abit.Counter.get(cbf.counter, 0) == 1
+    assert Abit.Counter.get(cbf.counter, 1) == 1
   end
 
   test "member?/2 returns correct membership" do

@@ -19,7 +19,7 @@ Talan requires Elixir 1.14 and OTP 25 or later.
 ```elixir
 def deps do
   [
-    {:talan, "~> 0.2.1"}
+    {:talan, "~> 1.0"}
   ]
 end
 ```

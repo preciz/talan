@@ -289,9 +289,9 @@ defmodule Talan.BloomFilter do
 
   ## Examples
 
-      b = Talan.BloomFilter.new(1000)
-      Talan.BloomFilter.hash_term(b, :any_term_can_be_hashed)
-      [9386, 8954, 8645, 4068, 5445, 6914, 2844]
+      iex> b = Talan.BloomFilter.new(1000, hash_functions: [fn _term -> 42 end])
+      iex> Talan.BloomFilter.hash_term(b, :any_term_can_be_hashed)
+      [42]
   """
   @spec hash_term(t(), term()) :: nonempty_list(non_neg_integer())
   def hash_term(%BF{filter_length: filter_length, hash_functions: hash_functions}, term) do
@@ -325,7 +325,7 @@ defmodule Talan.BloomFilter do
 
   ## Examples
 
-      iex> hash_functions = Talan.seed_n_murmur_hash_fun(7)
+      iex> hash_functions = [fn term -> :erlang.phash2(term) end]
       iex> b1 = Talan.BloomFilter.new(1000, hash_functions: hash_functions)
       iex> b1 |> Talan.BloomFilter.put("GitHub")
       iex> b2 = Talan.BloomFilter.new(1000, hash_functions: hash_functions)
@@ -362,7 +362,7 @@ defmodule Talan.BloomFilter do
 
   ## Examples
 
-      iex> hash_functions = Talan.seed_n_murmur_hash_fun(7)
+      iex> hash_functions = [fn term -> :erlang.phash2(term) end]
       iex> b1 = Talan.BloomFilter.new(1000, hash_functions: hash_functions)
       iex> b1 |> Talan.BloomFilter.put("GitHub")
       iex> b2 = Talan.BloomFilter.new(1000, hash_functions: hash_functions)
@@ -483,6 +483,10 @@ defmodule Talan.BloomFilter do
   This function converts the Bloom filter structure into a binary format,
   which can be used for storage or transmission.
 
+  The binary embeds the filter's hash functions and is only portable to
+  environments running compatible code. It is not a stable interchange format
+  across code upgrades.
+
   ## Examples
 
       iex> bloom_filter = Talan.BloomFilter.new(1000)
@@ -511,6 +515,9 @@ defmodule Talan.BloomFilter do
 
   This function takes a binary that was previously created by `serialize/1`
   and reconstructs the Bloom filter structure.
+
+  The modules and code versions defining the serialized hash functions must be
+  available and compatible.
 
   ## Examples
 

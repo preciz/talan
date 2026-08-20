@@ -104,8 +104,9 @@ defmodule Talan.CountingBloomFilter do
   @doc """
   Puts `term` into the filter by incrementing its counters.
 
-  After insertion, `member?/2` will return `true` for this `term` unless
-  `delete/2` modifies the counters representing its membership.
+  A successful insertion increments every counter selected by the term's
+  hashes. Membership is true only while all selected counters are positive, so
+  earlier deletions can keep it false.
 
   Returns `:ok`, or `{:error, :value_out_of_bounds}` if an affected counter is
   already at its maximum value. Updates to other affected counters may already
@@ -210,9 +211,9 @@ defmodule Talan.CountingBloomFilter do
   end
 
   @doc """
-  Returns the estimated number of times `term` was inserted. The estimate is the
-  minimum of the counters selected by the term's hashes. Hash collisions may
-  inflate the estimate.
+  Returns the estimated net frequency of `term` after insertions and deletions.
+  The estimate is the minimum of the counters selected by the term's hashes.
+  Hash collisions and deletions can distort it.
 
   ## Examples
 

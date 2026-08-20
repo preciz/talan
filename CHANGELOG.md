@@ -1,6 +1,6 @@
 # Changelog for Talan
 
-## Unreleased
+## v1.0.0 - 2026-08-20
   * Update `abit` to `~> 1.0.0` and require Elixir 1.14 / OTP 25 or later
   * Correct Counting Bloom membership, frequency, cardinality, and storage behavior
   * Allocate filters and counters to fully meet their requested capacity

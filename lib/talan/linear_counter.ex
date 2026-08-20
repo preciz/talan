@@ -123,6 +123,9 @@ defmodule Talan.LinearCounter do
   Returns the estimated cardinality for the given
   `%Talan.LinearCounter{}` struct.
 
+  A saturated counter has no unset bits, so its cardinality cannot be estimated
+  reliably; in that case this function returns the counter's filter length.
+
   ## Examples
 
       iex> c = Talan.LinearCounter.new(10_000)

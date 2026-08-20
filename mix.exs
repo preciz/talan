@@ -1,7 +1,7 @@
 defmodule Talan.MixProject do
   use Mix.Project
 
-  @version "0.2.1"
+  @version "1.0.0"
   @github "https://github.com/preciz/talan"
 
   def project do
@@ -49,7 +49,10 @@ defmodule Talan.MixProject do
     [
       maintainers: ["Barna Kovacs"],
       licenses: ["MIT"],
-      links: %{"GitHub" => @github}
+      links: %{
+        "Changelog" => "#{@github}/blob/master/CHANGELOG.md",
+        "GitHub" => @github
+      }
     ]
   end
 end
