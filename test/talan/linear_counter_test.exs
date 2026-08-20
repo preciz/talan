@@ -11,7 +11,7 @@ defmodule Talan.LinearCounterTest do
 
     cardinality = LinearCounter.cardinality(c)
 
-    assert 9900..10100 |> Enum.member?(cardinality)
+    assert 9900..10_100 |> Enum.member?(cardinality)
   end
 
   test "new/2 creates a LinearCounter with custom options" do
@@ -29,6 +29,8 @@ defmodule Talan.LinearCounterTest do
     end
 
     assert_raise ArgumentError, ~r/options must be a keyword list/, fn ->
+      # Deliberately bypass static type checking to exercise runtime validation.
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
       apply(LinearCounter, :new, [1000, %{hash_function: &is_integer/1}])
     end
 

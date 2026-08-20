@@ -338,20 +338,16 @@ defmodule Talan.BloomFilter do
       true
   """
   @spec merge(nonempty_list(t)) :: t
-  def merge(list = [first = %BF{atomics_ref: first_atomics_ref} | _tl]) do
+  def merge([first = %BF{atomics_ref: first_atomics_ref} | _tl] = list) do
     validate_compatible_filters!(list)
 
     %{size: size} = :atomics.info(first_atomics_ref)
 
     new_atomics_ref = :atomics.new(size, signed: false)
 
-    list
-    |> Enum.reduce(
-      new_atomics_ref,
-      fn %BF{atomics_ref: atomics_ref}, acc ->
-        Abit.union(acc, atomics_ref)
-      end
-    )
+    Enum.each(list, fn %BF{atomics_ref: atomics_ref} ->
+      Abit.union(new_atomics_ref, atomics_ref)
+    end)
 
     %BF{first | atomics_ref: new_atomics_ref}
   end
@@ -380,7 +376,7 @@ defmodule Talan.BloomFilter do
       false
   """
   @spec intersection(nonempty_list(t)) :: t
-  def intersection(list = [first = %BF{atomics_ref: first_atomics_ref} | filters]) do
+  def intersection([first = %BF{atomics_ref: first_atomics_ref} | filters] = list) do
     validate_compatible_filters!(list)
 
     %{size: size} = :atomics.info(first_atomics_ref)
@@ -389,13 +385,9 @@ defmodule Talan.BloomFilter do
 
     Abit.union(new_atomics_ref, first_atomics_ref)
 
-    filters
-    |> Enum.reduce(
-      new_atomics_ref,
-      fn %BF{atomics_ref: atomics_ref}, acc ->
-        Abit.intersect(acc, atomics_ref)
-      end
-    )
+    Enum.each(filters, fn %BF{atomics_ref: atomics_ref} ->
+      Abit.intersect(new_atomics_ref, atomics_ref)
+    end)
 
     %BF{first | atomics_ref: new_atomics_ref}
   end

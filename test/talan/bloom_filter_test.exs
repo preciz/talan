@@ -56,6 +56,8 @@ defmodule Talan.BloomFilterTest do
     end
 
     assert_raise ArgumentError, ~r/options must be a keyword list/, fn ->
+      # Deliberately bypass static type checking to exercise runtime validation.
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
       apply(BloomFilter, :new, [1000, %{hash_functions: []}])
     end
 
@@ -212,7 +214,7 @@ defmodule Talan.BloomFilterTest do
   end
 
   test "required_filter_length/2" do
-    assert BloomFilter.required_filter_length(10_000, 0.01) == 95851
+    assert BloomFilter.required_filter_length(10_000, 0.01) == 95_851
   end
 
   test "hash_term/2" do

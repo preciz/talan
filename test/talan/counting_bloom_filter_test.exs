@@ -35,6 +35,8 @@ defmodule Talan.CountingBloomFilterTest do
     end
 
     assert_raise ArgumentError, ~r/options must be a keyword list/, fn ->
+      # Deliberately bypass static type checking to exercise runtime validation.
+      # credo:disable-for-next-line Credo.Check.Refactor.Apply
       apply(CountingBloomFilter, :new, [1000, %{signed: false}])
     end
 

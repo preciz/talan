@@ -1,5 +1,9 @@
 defmodule Talan.Stream do
+  @moduledoc "Utilities for probabilistic stream processing."
+
   alias Talan.BloomFilter
+
+  @type stream :: %Stream{}
 
   @doc """
   Returns a stream that probabilistically removes duplicates.
@@ -24,7 +28,7 @@ defmodule Talan.Stream do
       iex> Talan.Stream.uniq(list, bloom_filter) |> Enum.to_list()
       ["a", "b", "c"]
   """
-  @spec uniq(Enumerable.t(), BloomFilter.t()) :: %Stream{}
+  @spec uniq(Enumerable.t(), BloomFilter.t()) :: stream()
   def uniq(enum, bloom_filter) do
     enum
     |> Stream.reject(fn x ->
