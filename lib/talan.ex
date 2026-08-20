@@ -21,6 +21,25 @@ defmodule Talan do
   end
 
   @doc false
+  @spec estimate_cardinality(pos_integer, non_neg_integer, pos_integer) :: non_neg_integer
+  def estimate_cardinality(capacity, occupied, hash_count) do
+    cond do
+      occupied == 0 ->
+        0
+
+      occupied <= hash_count ->
+        1
+
+      occupied == capacity ->
+        round(capacity / hash_count)
+
+      true ->
+        estimate = :math.log(capacity - occupied) - :math.log(capacity)
+        round(capacity * -estimate / hash_count)
+    end
+  end
+
+  @doc false
   def to_bitstring(<<>>) do
     []
   end

@@ -213,26 +213,11 @@ defmodule Talan.CountingBloomFilter do
         filter_length: filter_length,
         hash_functions: hash_functions
       }) do
-    set_counter_count = Enum.count(counter, fn value -> value > 0 end)
-    hash_function_count = length(hash_functions)
-
-    cond do
-      set_counter_count == 0 ->
-        0
-
-      set_counter_count <= hash_function_count ->
-        1
-
-      filter_length == set_counter_count ->
-        round(filter_length / hash_function_count)
-
-      true ->
-        est =
-          :math.log(filter_length - set_counter_count) -
-            :math.log(filter_length)
-
-        round(filter_length * -est / hash_function_count)
-    end
+    Talan.estimate_cardinality(
+      filter_length,
+      positive_counter_count(counter),
+      length(hash_functions)
+    )
   end
 
   @doc """
@@ -245,10 +230,7 @@ defmodule Talan.CountingBloomFilter do
         filter_length: filter_length,
         hash_functions: hash_functions
       }) do
-    set_counter_count = Enum.count(counter, fn value -> value > 0 end)
-    hash_function_count = length(hash_functions)
-
-    :math.pow(set_counter_count / filter_length, hash_function_count)
+    :math.pow(positive_counter_count(counter) / filter_length, length(hash_functions))
   end
 
   defp update(counter, filter_length, [hash_fun | hash_functions], term, increment) do
@@ -264,11 +246,8 @@ defmodule Talan.CountingBloomFilter do
   defp member_hashes?(counter, filter_length, [hash_fun | hash_functions], term) do
     hash = rem(hash_fun.(term), filter_length)
 
-    if member_hashes?(counter, filter_length, hash_functions, term) do
+    member_hashes?(counter, filter_length, hash_functions, term) and
       Abit.Counter.get(counter, hash) > 0
-    else
-      false
-    end
   end
 
   defp member_hashes?(_counter, _filter_length, [], _term), do: true
@@ -284,5 +263,9 @@ defmodule Talan.CountingBloomFilter do
     minimum = min_count(counter, filter_length, hash_functions, term)
 
     min(Abit.Counter.get(counter, hash), minimum)
+  end
+
+  defp positive_counter_count(counter) do
+    Enum.count(counter, fn value -> value > 0 end)
   end
 end

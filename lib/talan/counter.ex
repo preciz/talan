@@ -53,7 +53,7 @@ defmodule Talan.Counter do
     Validation.function!(hash_function, :hash_function)
 
     # Allocate ten bits per expected element, rounded up to a complete atomic word.
-    required_size = max(1, div(expected_cardinality * 10 + 63, 64))
+    required_size = div(expected_cardinality * 10 + 63, 64)
 
     %Counter{
       atomics_ref: :atomics.new(required_size, signed: false),

@@ -5,6 +5,7 @@
   * Validate constructor cardinalities and options consistently
   * Document that `Talan.Stream.uniq/2` mutates its Bloom filter
   * Test the minimum and current runtimes in CI and enforce formatting
+  * Share cardinality estimation and simplify generated filter code
   * Improve documentation wording and fix typos
   * Update locked dependencies, including Murmur to 2.0.1 and ExDoc to 0.40.3
   * Return a finite cardinality estimate when a linear counter is saturated

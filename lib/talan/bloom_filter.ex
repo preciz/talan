@@ -105,7 +105,7 @@ defmodule Talan.BloomFilter do
 
     filter_length = required_filter_length(cardinality, false_positive_probability)
 
-    atomics_arity = max(div(filter_length + 63, 64), 1)
+    atomics_arity = div(filter_length + 63, 64)
 
     {atomics_arity * 64, hash_functions}
   end
@@ -235,11 +235,8 @@ defmodule Talan.BloomFilter do
   defp do_member?(atomics_ref, filter_length, [hash_fun | hash_functions], term) do
     hash = rem(hash_fun.(term), filter_length)
 
-    if do_member?(atomics_ref, filter_length, hash_functions, term) do
+    do_member?(atomics_ref, filter_length, hash_functions, term) and
       Abit.bit_at(atomics_ref, hash) == 1
-    else
-      false
-    end
   end
 
   defp do_member?(_atomics_ref, _filter_length, [], _term), do: true
@@ -387,24 +384,11 @@ defmodule Talan.BloomFilter do
         filter_length: filter_length,
         hash_functions: hash_functions
       }) do
-    set_bits_count = Abit.set_bits_count(atomics_ref)
-    hash_function_count = length(hash_functions)
-
-    cond do
-      set_bits_count == 0 ->
-        0
-
-      set_bits_count <= hash_function_count ->
-        1
-
-      filter_length == set_bits_count ->
-        round(filter_length / hash_function_count)
-
-      true ->
-        est = :math.log(filter_length - set_bits_count) - :math.log(filter_length)
-
-        round(filter_length * -est / hash_function_count)
-    end
+    Talan.estimate_cardinality(
+      filter_length,
+      Abit.set_bits_count(atomics_ref),
+      length(hash_functions)
+    )
   end
 
   @doc """
