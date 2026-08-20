@@ -7,6 +7,7 @@
   * Round Bloom filter storage up so it always meets the required bit count
   * Allocate exactly one Counting Bloom filter counter per Bloom filter bit
   * Validate Bloom filter compatibility before merge and intersection operations
+  * Safely decode serialized Bloom filters without creating unsafe runtime terms
 
 ## v0.2.1
   * Improve syntax and language

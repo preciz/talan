@@ -462,7 +462,7 @@ defmodule Talan.BloomFilter do
   def deserialize(binary) when is_binary(binary) do
     map =
       binary
-      |> :erlang.binary_to_term()
+      |> :erlang.binary_to_term([:safe])
       |> Map.update!(:atomics_ref, &Abit.Atomics.deserialize(&1))
 
     struct!(__MODULE__, map)

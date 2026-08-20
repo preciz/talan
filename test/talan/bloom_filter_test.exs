@@ -216,6 +216,16 @@ defmodule Talan.BloomFilterTest do
     assert original_info == deserialized_info
   end
 
+  test "deserialize rejects external terms that would create new atoms" do
+    atom_name = "talan_atom_that_must_not_be_created_#{System.unique_integer([:positive])}"
+    atom_name_size = byte_size(atom_name)
+    unsafe_binary = <<131, 100, atom_name_size::16, atom_name::binary>>
+
+    assert_raise ArgumentError, fn ->
+      BloomFilter.deserialize(unsafe_binary)
+    end
+  end
+
   test "cardinality when all bits are set" do
     b = BloomFilter.new(10, false_positive_probability: 0.1)
 
