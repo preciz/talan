@@ -115,6 +115,31 @@ defmodule Talan.CountingBloomFilterTest do
     assert CountingBloomFilter.count(cbf, "absent") == -1
   end
 
+  test "put/2 reports counter overflow" do
+    cbf =
+      CountingBloomFilter.new(1,
+        counters_bit_size: 2,
+        hash_functions: [fn _term -> 0 end]
+      )
+
+    assert :ok = CountingBloomFilter.put(cbf, "present")
+    assert {:error, :value_out_of_bounds} = CountingBloomFilter.put(cbf, "present")
+    assert CountingBloomFilter.count(cbf, "present") == 1
+  end
+
+  test "delete/2 reports counter underflow" do
+    cbf =
+      CountingBloomFilter.new(1,
+        counters_bit_size: 2,
+        hash_functions: [fn _term -> 0 end]
+      )
+
+    assert :ok = CountingBloomFilter.delete(cbf, "absent")
+    assert :ok = CountingBloomFilter.delete(cbf, "absent")
+    assert {:error, :value_out_of_bounds} = CountingBloomFilter.delete(cbf, "absent")
+    assert CountingBloomFilter.count(cbf, "absent") == -2
+  end
+
   test "member?/2 returns correct membership" do
     cbf = CountingBloomFilter.new(1000)
     CountingBloomFilter.put(cbf, "test")

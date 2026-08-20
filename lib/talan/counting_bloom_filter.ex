@@ -43,6 +43,7 @@ defmodule Talan.CountingBloomFilter do
           | {:false_positive_probability, float()}
           | {:hash_functions, list(Talan.hash_function())}
   @type options :: list(option())
+  @type update_result :: :ok | {:error, :value_out_of_bounds}
 
   @doc """
   Returns a new `%Talan.CountingBloomFilter{}` struct.
@@ -106,7 +107,9 @@ defmodule Talan.CountingBloomFilter do
   After insertion, `member?/2` will return `true` for this `term` unless
   `delete/2` modifies the counters representing its membership.
 
-  Returns `:ok`.
+  Returns `:ok`, or `{:error, :value_out_of_bounds}` if an affected counter is
+  already at its maximum value. Updates to other affected counters may already
+  have succeeded because the operation is not atomic across counters.
 
   ## Examples
 
@@ -114,7 +117,7 @@ defmodule Talan.CountingBloomFilter do
       iex> cbf |> Talan.CountingBloomFilter.put("hat")
       :ok
   """
-  @spec put(t, any) :: :ok
+  @spec put(t, any) :: update_result()
   def put(
         %CBF{
           counter: counter,
@@ -130,6 +133,10 @@ defmodule Talan.CountingBloomFilter do
   Probabilistically deletes `term` from `bloom_filter` and
   decrements counters in `counter`.
 
+  Returns `:ok`, or `{:error, :value_out_of_bounds}` if an affected counter is
+  already at its minimum value. Updates to other affected counters may already
+  have succeeded because the operation is not atomic across counters.
+
   ## Examples
 
       iex> cbf = Talan.CountingBloomFilter.new(10_000)
@@ -144,7 +151,7 @@ defmodule Talan.CountingBloomFilter do
       iex> cbf |> Talan.CountingBloomFilter.count("this wasn't there")
       -1
   """
-  @spec delete(t, any) :: :ok
+  @spec delete(t, any) :: update_result()
   def delete(
         %CBF{
           counter: counter,
@@ -269,10 +276,12 @@ defmodule Talan.CountingBloomFilter do
 
   defp update(counter, filter_length, [hash_fun | hash_functions], term, increment) do
     hash = rem(hash_fun.(term), filter_length)
+    result = update(counter, filter_length, hash_functions, term, increment)
 
-    update(counter, filter_length, hash_functions, term, increment)
-    Abit.Counter.add(counter, hash, increment)
-    :ok
+    case Abit.Counter.add(counter, hash, increment) do
+      {:ok, _result} -> result
+      {:error, :value_out_of_bounds} = error -> error
+    end
   end
 
   defp update(_counter, _filter_length, [], _term, _increment), do: :ok
