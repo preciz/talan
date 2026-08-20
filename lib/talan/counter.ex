@@ -1,6 +1,6 @@
 defmodule Talan.Counter do
   @moduledoc """
-  Linear probabilistic counter implementation with **concurrent accessibility**,
+  Linear probabilistic counter implementation with **safe concurrent access**,
   powered by the [:atomics](http://erlang.org/doc/man/atomics.html) module for cardinality estimation.
 
   Cardinality is the count of unique elements.
@@ -53,10 +53,10 @@ defmodule Talan.Counter do
   end
 
   @doc """
-  Hashes `term` and sets a bit to mark it has been seen.
+  Hashes `term` and sets a bit to record that the term has been seen.
 
   Doesn't store the `term` so it's space-efficient.
-  Uses `:atomics` so it's mutable & highly concurrent.
+  Uses `:atomics` so it's mutable and highly concurrent.
 
   Returns `:ok`.
 

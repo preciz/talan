@@ -1,7 +1,6 @@
 defmodule Talan do
   @moduledoc """
-  Fast & concurrent probabilistic data structures
-  built on top of :atomics with **concurrent accessibility**.
+  Fast, concurrent probabilistic data structures built on Erlang's `:atomics` module.
 
     * `Talan.BloomFilter` - bloom filter based on `:atomics`
     * `Talan.CountingBloomFilter` - counting bloom filter based on `:atomics`

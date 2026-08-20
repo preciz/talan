@@ -1,7 +1,7 @@
 # Changelog for Talan
 
 ## v0.2.1
-  * Improve syntax & language
+  * Improve syntax and language
   * Update `abit` to `~> 0.4.0` and `ex_doc` to `~> 0.40`
   * Replace deprecated `Abit.merge/2` with `Abit.union/2`
 
@@ -18,4 +18,4 @@
   * Update murmur dependency to 1.0.3 to fix compilation warnings
 
 ## v0.1.1
-  * Fix - work with Elixir 1.7 by not using Kernel.floor/1 & Kernel.ceil/1
+  * Fix - work with Elixir 1.7 by not using Kernel.floor/1 and Kernel.ceil/1

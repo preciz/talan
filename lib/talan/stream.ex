@@ -2,7 +2,7 @@ defmodule Talan.Stream do
   alias Talan.BloomFilter
 
   @doc """
-  Returns a probabilistically unique stream.
+  Returns a stream that probabilistically removes duplicates.
 
   Its main advantage is that it doesn't store elements
   emitted by the stream.
@@ -11,8 +11,8 @@ defmodule Talan.Stream do
   The stream never returns duplicate elements but it
   sometimes detects false-positive duplicates depending
   on the Bloom filter it uses.
-  False positives are faulty duplicate detections that
-  get rejected.
+  A false positive causes a unique element to be incorrectly
+  rejected as a duplicate.
 
   ## Examples
 

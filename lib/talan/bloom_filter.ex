@@ -1,6 +1,6 @@
 defmodule Talan.BloomFilter do
   @moduledoc """
-  Bloom filter implementation with **concurrent accessibility**,
+  Bloom filter implementation with **safe concurrent access**,
   powered by the [:atomics](http://erlang.org/doc/man/atomics.html) module.
 
   "A Bloom filter is a space-efficient probabilistic data structure,
@@ -16,8 +16,8 @@ defmodule Talan.BloomFilter do
   ## Features
 
     * Fixed-size Bloom filter
-    * Concurrent reads & writes
-    * Custom & default hash functions
+    * Concurrent reads and writes
+    * Custom and default hash functions
     * Merge multiple Bloom filters into one
     * Intersect multiple Bloom filters into one
     * Estimate number of unique elements
@@ -47,8 +47,8 @@ defmodule Talan.BloomFilter do
   @doc """
   Returns a new `%Talan.BloomFilter{}` for the desired `cardinality`.
 
-  `cardinality` is the expected number of unique items. Duplicated items
-  can be infinite.
+  `cardinality` is the expected number of unique items. Duplicate items do not
+  count toward the expected cardinality.
 
   ## Options
     * `:false_positive_probability` - a float, defaults to 0.01
@@ -99,7 +99,7 @@ defmodule Talan.BloomFilter do
   end
 
   @doc """
-  Returns the count of required hash functions for the
+  Returns the required number of hash functions for the
   given `false_positive_probability`.
 
   [Wikipedia - Bloom filter - Optimal number of hash functions](https://en.wikipedia.org/wiki/Bloom_filter#Optimal_number_of_hash_functions)
@@ -146,8 +146,7 @@ defmodule Talan.BloomFilter do
   @doc """
   Puts `term` into `bloom_filter`, a `%Talan.BloomFilter{}` struct.
 
-  After this the `member?` function will always return `true`
-  for the membership of `term`.
+  After insertion, `member?/2` will always return `true` for this `term`.
 
   Returns `:ok`.
 
@@ -179,8 +178,8 @@ defmodule Talan.BloomFilter do
   @doc """
   Checks for membership of `term` in `bloom_filter`.
 
-  Returns `false` if not a member. (definitely not a member)
-  Returns `true` if maybe a member. (possibly a member)
+  Returns `false` if the term is definitely absent.
+  Returns `true` if the term may be present.
 
   ## Examples
 
@@ -237,7 +236,7 @@ defmodule Talan.BloomFilter do
   @doc """
   Merges the atomics of multiple `%Talan.BloomFilter{}` structs into one new struct.
 
-  Note: To work correctly filters with identical size & hash functions must be used.
+  All filters must have the same size and use the same hash functions.
 
   Returns a new `%Talan.BloomFilter{}` struct whose set bits are the merged set bits of
   the bloom filters in the `list`.
@@ -276,7 +275,7 @@ defmodule Talan.BloomFilter do
   @doc """
   Intersects the atomics of multiple `%Talan.BloomFilter{}` structs into one new struct.
 
-  Note: To work correctly filters with identical size & hash functions must be used.
+  All filters must have the same size and use the same hash functions.
 
   Returns a new `%BloomFilter{}` struct whose set bits are the intersection of
   the Bloom filters in the `list`.
@@ -316,8 +315,8 @@ defmodule Talan.BloomFilter do
   end
 
   @doc """
-  Returns a non-negative integer representing the
-  estimated cardinality count of unique elements in the filter.
+  Returns a non-negative integer representing the estimated number of unique
+  elements in the filter.
 
   ## Examples
 
@@ -361,8 +360,8 @@ defmodule Talan.BloomFilter do
   end
 
   @doc """
-  Returns a float representing current estimated
-  false positive probability.
+  Returns a float representing the current estimated
+  false-positive probability.
 
   ## Examples
 

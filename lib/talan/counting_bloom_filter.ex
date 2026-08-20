@@ -1,13 +1,13 @@
 defmodule Talan.CountingBloomFilter do
   @moduledoc """
-  Counting bloom filter implementation with **concurrent accessibility**,
+  Counting Bloom filter implementation with **safe concurrent access**,
   powered by the [:atomics](http://erlang.org/doc/man/atomics.html) module.
 
   ## Features
 
     * Fixed-size Counting Bloom filter
-    * Concurrent reads & writes
-    * Custom & default hash functions
+    * Concurrent reads and writes
+    * Custom and default hash functions
     * Estimate number of unique elements
     * Estimate false positive probability
 
@@ -30,12 +30,12 @@ defmodule Talan.CountingBloomFilter do
   @doc """
   Returns a new `%Talan.CountingBloomFilter{}` struct.
 
-  `cardinality` is the expected number of unique items. Duplicated items
-  can be infinite.
+  `cardinality` is the expected number of unique items. Duplicate items do not
+  count toward the expected cardinality.
 
   ## Options
     * `:counters_bit_size` - bit size of counters, defaults to `8`
-    * `:signed` - to have signed or unsigned counters, defaults to `true`
+    * `:signed` - whether counters are signed, defaults to `true`
     * `:false_positive_probability` - a float, defaults to `0.01`
     * `:hash_functions` - a list of hash functions, defaults to randomly seeded Murmur
 
@@ -74,9 +74,8 @@ defmodule Talan.CountingBloomFilter do
   @doc """
   Puts `term` into `bloom_filter` and increments counters in `counter`.
 
-  After this the `member?/2` function will return `true`
-  for the membership of `term` unless bits representing
-  membership are modified by the `delete/2` function.
+  After insertion, `member?/2` will return `true` for this `term` unless
+  `delete/2` modifies the bits representing its membership.
 
   Returns `:ok`.
 
@@ -150,12 +149,9 @@ defmodule Talan.CountingBloomFilter do
   end
 
   @doc """
-  Returns the probabilistic count of term in `counter`.
-
-  This means that (given no hash collisions) it returns how many times
-  the item was put into the CountingBloomFilter. A few hash collisions
-  should also be fine since it returns the average count of the counters.
-  A single item is hashed with multiple counters.
+  Returns the estimated number of times `term` was inserted. The estimate is the
+  average of the counters selected by the term's hashes, so hash collisions may
+  affect it.
 
   ## Examples
 
