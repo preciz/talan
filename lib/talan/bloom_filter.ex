@@ -52,7 +52,8 @@ defmodule Talan.BloomFilter do
 
   ## Options
     * `:false_positive_probability` - a float, defaults to 0.01
-    * `:hash_functions` - a list of hash functions, defaults to randomly seeded Murmur
+    * `:hash_functions` - a list of functions that each accept a term and return a
+      non-negative integer, defaults to randomly seeded Murmur
 
   ## Examples
 
@@ -216,7 +217,8 @@ defmodule Talan.BloomFilter do
   defp do_member?(_, []), do: true
 
   @doc """
-  Hashes `term` with all `hash_functions` of `%Talan.BloomFilter{}`.
+  Hashes `term` with all `hash_functions` of `%Talan.BloomFilter{}`. Custom hash
+  functions must return non-negative integers.
 
   Returns a list of hashed values.
 

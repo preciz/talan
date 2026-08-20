@@ -11,6 +11,7 @@
   * Use Counting Bloom filter counters as the single source of membership state
   * Estimate Counting Bloom filter frequencies from the minimum selected counter
   * Avoid allocating an unused bit array for Counting Bloom filters
+  * Round linear counter storage up to meet its target size
 
 ## v0.2.1
   * Improve syntax and language

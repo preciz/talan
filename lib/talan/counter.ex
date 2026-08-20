@@ -27,7 +27,8 @@ defmodule Talan.Counter do
   handle with an approximately 1% error rate.
 
   ## Options
-    * `:hash_function` - defaults to `Murmur.hash_x64_128/1`
+    * `:hash_function` - a function that accepts a term and returns a non-negative
+      integer, defaults to `Murmur.hash_x64_128/1`
 
   ## Examples
 
@@ -42,8 +43,8 @@ defmodule Talan.Counter do
   def new(expected_cardinality, options \\ []) do
     hash_function = options |> Keyword.get(:hash_function, &Murmur.hash_x64_128/1)
 
-    # good defaults
-    required_size = max(1, round(Float.floor(expected_cardinality * 10 / 64)))
+    # Allocate ten bits per expected element, rounded up to a complete atomic word.
+    required_size = max(1, div(expected_cardinality * 10 + 63, 64))
 
     %Counter{
       atomics_ref: :atomics.new(required_size, signed: false),

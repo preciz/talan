@@ -21,6 +21,16 @@ defmodule Talan.CounterTest do
     assert c.hash_function == custom_hash_function
   end
 
+  test "new/2 allocates at least ten bits per expected element" do
+    for expected_cardinality <- [1, 7, 1_000, 10_000] do
+      counter = Counter.new(expected_cardinality)
+      required_bits = expected_cardinality * 10
+
+      assert counter.filter_length >= required_bits
+      assert counter.filter_length < required_bits + 64
+    end
+  end
+
   test "put/2 adds elements to the Counter" do
     c = Counter.new(1000)
     assert :ok = Counter.put(c, "test")

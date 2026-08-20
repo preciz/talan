@@ -42,7 +42,8 @@ defmodule Talan.CountingBloomFilter do
     * `:counters_bit_size` - bit size of counters, defaults to `8`
     * `:signed` - whether counters are signed, defaults to `true`
     * `:false_positive_probability` - a float, defaults to `0.01`
-    * `:hash_functions` - a list of hash functions, defaults to randomly seeded Murmur
+    * `:hash_functions` - a list of functions that each accept a term and return a
+      non-negative integer, defaults to randomly seeded Murmur
 
   ## Examples
 
