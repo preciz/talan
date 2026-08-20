@@ -22,6 +22,10 @@ defmodule Talan.CountingBloomFilter do
 
   alias Talan.BloomFilter, as: BF
   alias Talan.CountingBloomFilter, as: CBF
+  alias Talan.Validation
+
+  @counter_bit_sizes [2, 4, 8, 16, 32]
+  @options [:counters_bit_size, :signed, :false_positive_probability, :hash_functions]
 
   @enforce_keys [:filter_length, :hash_functions, :counter]
   defstruct [:filter_length, :hash_functions, :counter]
@@ -37,6 +41,8 @@ defmodule Talan.CountingBloomFilter do
 
   `cardinality` is the expected number of unique items. Duplicate items do not
   count toward the expected cardinality.
+
+  Raises `ArgumentError` if `cardinality` or any option is invalid.
 
   ## Options
     * `:counters_bit_size` - bit size of counters, defaults to `8`
@@ -57,12 +63,18 @@ defmodule Talan.CountingBloomFilter do
       iex> cbf |> Talan.CountingBloomFilter.count("phone")
       1
   """
-  @spec new(pos_integer, list) :: t
+  @spec new(pos_integer, keyword) :: t
   def new(cardinality, options \\ []) do
+    Validation.positive_integer!(cardinality, :cardinality)
+    Validation.options!(options, @options)
+
     {filter_length, hash_functions} = BF.configuration(cardinality, options)
 
     counters_bit_size = options |> Keyword.get(:counters_bit_size, 8)
     signed = options |> Keyword.get(:signed, true)
+
+    Validation.one_of!(counters_bit_size, @counter_bit_sizes, :counters_bit_size)
+    Validation.boolean!(signed, :signed)
 
     counter =
       Abit.Counter.new(

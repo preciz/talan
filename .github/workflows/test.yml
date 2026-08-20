@@ -3,7 +3,7 @@ name: test
 on:
   pull_request:
   push:
-      branches:
+    branches:
       - master
 
 jobs:
@@ -14,14 +14,15 @@ jobs:
       MIX_ENV: test
 
     strategy:
+      fail-fast: false
       matrix:
         include:
           - elixir: 1.14.3
             otp: 25.1
             lint: true
-            installer: true
-
-
+          - elixir: 1.20.3
+            otp: 29.0
+            lint: false
     runs-on: ubuntu-latest
 
     steps:
@@ -35,6 +36,10 @@ jobs:
 
     - name: Install Dependencies
       run: mix deps.get --only test
+
+    - name: Check Formatting
+      if: matrix.lint
+      run: mix format --check-formatted
 
     - name: Run Tests
       run: mix test

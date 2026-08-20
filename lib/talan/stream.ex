@@ -14,6 +14,9 @@ defmodule Talan.Stream do
   A false positive causes a unique element to be incorrectly
   rejected as a duplicate.
 
+  This mutates `bloom_filter`. Re-enumerating the returned stream may produce
+  different results because previously emitted elements remain recorded.
+
   ## Examples
 
       iex> list = ["a", "b", "c", "a", "b"]

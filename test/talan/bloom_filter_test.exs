@@ -41,8 +41,34 @@ defmodule Talan.BloomFilterTest do
   end
 
   test "new/2 raises error for invalid false_positive_probability" do
-    assert_raise ArgumentError, fn ->
-      BloomFilter.new(1000, false_positive_probability: 2.0)
+    for probability <- [0, 1, -0.1, 1.1, :invalid] do
+      assert_raise ArgumentError, ~r/false_positive_probability/, fn ->
+        BloomFilter.new(1000, false_positive_probability: probability)
+      end
+    end
+  end
+
+  test "new/2 validates cardinality and options" do
+    for cardinality <- [0, -1, 1.0, :invalid] do
+      assert_raise ArgumentError, ~r/cardinality must be a positive integer/, fn ->
+        BloomFilter.new(cardinality)
+      end
+    end
+
+    assert_raise ArgumentError, ~r/options must be a keyword list/, fn ->
+      apply(BloomFilter, :new, [1000, %{hash_functions: []}])
+    end
+
+    assert_raise ArgumentError, ~r/unknown options: \[:unknown\]/, fn ->
+      BloomFilter.new(1000, unknown: true)
+    end
+  end
+
+  test "new/2 validates custom hash functions" do
+    for hash_functions <- [:invalid, [fn _left, _right -> 0 end], [&is_integer/1, :invalid]] do
+      assert_raise ArgumentError, ~r/hash_functions/, fn ->
+        BloomFilter.new(1000, hash_functions: hash_functions)
+      end
     end
   end
 

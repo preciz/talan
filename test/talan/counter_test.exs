@@ -21,6 +21,28 @@ defmodule Talan.CounterTest do
     assert c.hash_function == custom_hash_function
   end
 
+  test "new/2 validates expected cardinality and options" do
+    for expected_cardinality <- [0, -1, 1.0, :invalid] do
+      assert_raise ArgumentError, ~r/expected_cardinality must be a positive integer/, fn ->
+        Counter.new(expected_cardinality)
+      end
+    end
+
+    assert_raise ArgumentError, ~r/options must be a keyword list/, fn ->
+      apply(Counter, :new, [1000, %{hash_function: &is_integer/1}])
+    end
+
+    assert_raise ArgumentError, ~r/unknown options: \[:unknown\]/, fn ->
+      Counter.new(1000, unknown: true)
+    end
+
+    for hash_function <- [:invalid, fn _left, _right -> 0 end] do
+      assert_raise ArgumentError, ~r/hash_function must be a one-argument function/, fn ->
+        Counter.new(1000, hash_function: hash_function)
+      end
+    end
+  end
+
   test "new/2 allocates at least ten bits per expected element" do
     for expected_cardinality <- [1, 7, 1_000, 10_000] do
       counter = Counter.new(expected_cardinality)

@@ -19,12 +19,17 @@ defmodule Talan.Counter do
         }
 
   alias Talan.Counter
+  alias Talan.Validation
+
+  @options [:hash_function]
 
   @doc """
   Returns a new `%Talan.Counter{}` struct.
 
   `expected_cardinality` is the maximum number of unique items the counter will
   handle with an approximately 1% error rate.
+
+  Raises `ArgumentError` if `expected_cardinality` or any option is invalid.
 
   ## Options
     * `:hash_function` - a function that accepts a term and returns a non-negative
@@ -39,9 +44,13 @@ defmodule Talan.Counter do
       iex> c |> Talan.Counter.cardinality()
       3
   """
-  @spec new(non_neg_integer, list) :: t
+  @spec new(pos_integer, keyword) :: t
   def new(expected_cardinality, options \\ []) do
+    Validation.positive_integer!(expected_cardinality, :expected_cardinality)
+    Validation.options!(options, @options)
+
     hash_function = options |> Keyword.get(:hash_function, &Murmur.hash_x64_128/1)
+    Validation.function!(hash_function, :hash_function)
 
     # Allocate ten bits per expected element, rounded up to a complete atomic word.
     required_size = max(1, div(expected_cardinality * 10 + 63, 64))

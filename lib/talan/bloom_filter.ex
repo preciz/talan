@@ -34,6 +34,9 @@ defmodule Talan.BloomFilter do
   """
 
   alias __MODULE__, as: BF
+  alias Talan.Validation
+
+  @options [:false_positive_probability, :hash_functions]
 
   @enforce_keys [:atomics_ref, :filter_length, :hash_functions]
   defstruct [:atomics_ref, :filter_length, :hash_functions]
@@ -50,6 +53,8 @@ defmodule Talan.BloomFilter do
   `cardinality` is the expected number of unique items. Duplicate items do not
   count toward the expected cardinality.
 
+  Raises `ArgumentError` if `cardinality` or any option is invalid.
+
   ## Options
     * `:false_positive_probability` - a float, defaults to 0.01
     * `:hash_functions` - a list of functions that each accept a term and return a
@@ -61,8 +66,11 @@ defmodule Talan.BloomFilter do
       iex> bloom_filter |> Talan.BloomFilter.put("Barna Kovacs")
       :ok
   """
-  @spec new(pos_integer, list) :: t
-  def new(cardinality, options \\ []) when is_integer(cardinality) and cardinality > 0 do
+  @spec new(pos_integer, keyword) :: t
+  def new(cardinality, options \\ []) do
+    Validation.positive_integer!(cardinality, :cardinality)
+    Validation.options!(options, @options)
+
     {filter_length, hash_functions} = configuration(cardinality, options)
     atomics_ref = :atomics.new(div(filter_length, 64), signed: false)
 
@@ -74,20 +82,15 @@ defmodule Talan.BloomFilter do
   end
 
   @doc false
-  @spec configuration(pos_integer, list) :: {pos_integer, list}
-  def configuration(cardinality, options \\ [])
-      when is_integer(cardinality) and cardinality > 0 do
+  @spec configuration(pos_integer, keyword) :: {pos_integer, list}
+  def configuration(cardinality, options \\ []) do
+    Validation.positive_integer!(cardinality, :cardinality)
+
     false_positive_probability = options |> Keyword.get(:false_positive_probability, 0.01)
     hash_functions = options |> Keyword.get(:hash_functions, [])
 
-    if false_positive_probability <= 0 || false_positive_probability >= 1 do
-      raise ArgumentError, """
-      false_positive_probability must be a float between 0 and 1.
-      E.g. 0.01
-
-      Got: #{inspect(false_positive_probability)}
-      """
-    end
+    Validation.probability!(false_positive_probability, :false_positive_probability)
+    Validation.functions!(hash_functions, :hash_functions)
 
     hash_functions =
       case hash_functions do

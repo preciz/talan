@@ -15,6 +15,34 @@ defmodule Talan.CountingBloomFilterTest do
     assert %CountingBloomFilter{} = cbf
   end
 
+  test "new/2 validates cardinality and options" do
+    for cardinality <- [0, -1, 1.0, :invalid] do
+      assert_raise ArgumentError, ~r/cardinality must be a positive integer/, fn ->
+        CountingBloomFilter.new(cardinality)
+      end
+    end
+
+    for counters_bit_size <- [1, 3, 64, "8"] do
+      assert_raise ArgumentError, ~r/counters_bit_size must be one of/, fn ->
+        CountingBloomFilter.new(1000, counters_bit_size: counters_bit_size)
+      end
+    end
+
+    for signed <- [nil, 0, :yes] do
+      assert_raise ArgumentError, ~r/signed must be a boolean/, fn ->
+        CountingBloomFilter.new(1000, signed: signed)
+      end
+    end
+
+    assert_raise ArgumentError, ~r/options must be a keyword list/, fn ->
+      apply(CountingBloomFilter, :new, [1000, %{signed: false}])
+    end
+
+    assert_raise ArgumentError, ~r/unknown options: \[:unknown\]/, fn ->
+      CountingBloomFilter.new(1000, unknown: true)
+    end
+  end
+
   test "new/2 allocates one counter per Bloom filter bit" do
     for counters_bit_size <- [2, 4, 8, 16, 32] do
       cbf = CountingBloomFilter.new(1000, counters_bit_size: counters_bit_size)
