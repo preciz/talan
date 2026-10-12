@@ -50,7 +50,7 @@ defmodule Talan.MixProject do
       maintainers: ["Barna Kovacs"],
       licenses: ["MIT"],
       links: %{
-        "Changelog" => "#{@github}/blob/master/CHANGELOG.md",
+        "Changelog" => "#{@github}/blob/main/CHANGELOG.md",
         "GitHub" => @github
       }
     ]
