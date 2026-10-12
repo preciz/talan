@@ -12,7 +12,7 @@ defmodule Talan.Validation do
 
   @spec options!(term(), list(atom())) :: keyword()
   def options!(options, allowed_keys) do
-    unless Keyword.keyword?(options) do
+    if !Keyword.keyword?(options) do
       raise ArgumentError, "options must be a keyword list, got: #{inspect(options)}"
     end
 
